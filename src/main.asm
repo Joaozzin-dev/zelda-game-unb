@@ -8,6 +8,6 @@
 # Nome do jogo: The legend of Samara				                      #
 #							                                        #
 #########################################################
-
+#a
 .include "score.asm"
 HIGHSCORE: .word 0
