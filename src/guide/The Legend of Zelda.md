@@ -1,73 +1,125 @@
-# Projeto Aplicativo – The Legend of Zelda (RISC-V)
+Beleza — vamos montar **4 setores claros**, bem organizados, para um projeto em Assembly RISC-V com gráfico, HUD, lógica, ranking e assets.
 
-## Objetivo
-Aplicar os conhecimentos de programação Assembly RISC-V em um projeto prático utilizando o simulador Rars16_Custom1 ou FPGRars.
+Aqui estão **as divisões mais inteligentes para acelerar o desenvolvimento**:
 
-## Requerimentos Gerais
+---
 
-### Implementação
-Desenvolver uma versão própria do jogo The Legend of Zelda (NES), com liberdade criativa para adaptações.
+# 🔵 **1) Setor de LÓGICA & MECÂNICAS (Gameplay Team) João pedro, Marianna**
 
-### Ferramentas obrigatórias no Rars
-- Interface gráfica: Bitmap Display (320×240, 8 bits/pixel)
-- Interface com teclado: Keyboard and Display MMIO
-- Interface de áudio MIDI: ecalls 30, 31, 32 e 33
-- Semestre: 2025/2
+**Responsáveis por:**
 
-## Especificações da Implementação (pontuação)
+* Sistema de jogo (movimento, colisões, regras).
+* Rotinas principais (`main`, loop do jogo).
+* Sistema de pontuação.
+* Condições de vitória/derrota.
+* Chamada das funções do HUD e Draw.
 
-### Cenários e mapa
-- Quatro cenários com layouts diferentes (mapa pode ser estático) — (1.0)
-- Pelo menos um puzzle (dungeons, chaves, portas secretas, botões etc.) — (0.25)
+**Arquivos típicos:**
 
-### Sistemas do jogo
-- Loja e sistema de moedas — (0.25)
-- Mecânica de itens (poções, escudos, armas etc.) — (0.5)
-- Condição de vitória definida (resolver puzzle, derrotar inimigos etc.) — (0.5)
+* `main.asm`
+* `logic.asm`
+* `input.asm`
+* `ranking.asm` (parte lógica; gravação de score pode ser juntos ou separado)
 
-### Jogador
-- Animação e movimentação — (1.0)
-- Colisão com obstáculos e limites do mapa — (0.5)
+**Perfil ideal:**
+Pessoas boas em lógica, gostam de quebrar problemas, entender fluxo, usar registradores com cuidado.
 
-### Inimigos
-- Combate com inimigos — (0.5)
-- Dois tipos diferentes de inimigos — (0.5)
-- Animação e movimentação dos inimigos — (0.25)
+---
 
-### Interface
-- HUD mostrando vidas, moedas, itens e fase atual — (0.25)
+# 🟣 **2) Setor de GRÁFICOS & RENDER (Render Team) **
 
-### Áudio
-- Música e efeitos sonoros — (0.5)
+**Responsáveis por:**
 
-## Documentação (1.0 ponto)
-Produzir um artigo científico de quatro páginas seguindo o modelo fornecido, contendo:
-- Resumo
-- Introdução
-- Metodologia
-- Resultados Obtidos
-- Conclusão
-- Referências
+* Sistema de desenho na tela.
+* Manipulação do framebuffer (VGA).
+* Funções como:
 
-Recomendação: consultar artigos do SBGames para referência de estrutura.
+  * `draw_pixel`
+  * `draw_sprite`
+  * `clear_screen`
+  * `draw_background`
+* Organização do pallete, posições dos sprites.
+* Otimizações visuais (reduzir flicker, desenhar mais rápido).
 
-## Entregáveis
+**Arquivos típicos:**
 
-### Apresentação
-Preparar uma apresentação de até 10 minutos abordando:
-- Desenvolvimento do jogo
-- Técnicas utilizadas
-- Dificuldades encontradas
-- Demonstração (permitido usar cheats para trocar de fase)
+* `draw.asm`
+* `sprites.asm`
+* `frame.asm`
 
-### Arquivos
-Enviar no Moodle/Aprender3 um arquivo .zip contendo:
-- Códigos-fonte (.s)
-- Artigo em PDF
+**Perfil ideal:**
+Pessoas que gostam de matemática simples, coordenadas, otimização e parte visual.
 
-## Referências
-Gameplay do jogo original (NES):  
-https://www.youtube.com/watch?v=6g2vk8Gudqs&t=481s
+---
 
-Versão jogável no navegador:  
-https://www.retrogames.cc/nes-games/the-legend-of-zelda-font-mod-retranslation.html
+# 🟢 **3) Setor de HUD & INTERFACE (HUD / UI Team)**
+
+**Responsáveis por:**
+
+* Mostrar:
+
+  * Score
+  * Vida
+  * Tempo
+  * Objetivos
+  * Mensagens (“GAME OVER”, “START”, etc.)
+* Conexão com o setor de lógica.
+* Rotinas organizadas para texto e numeração.
+
+**Arquivos típicos:**
+
+* `hud.asm`
+* `text.asm`
+
+**Perfil ideal:**
+Pessoas que gostam de organização, padronização, parte visual porém estruturada.
+
+---
+
+# 🟠 **4) Setor de ASSETS & FERRAMENTAS (Assets Team) Josiel & CARLOS MANOEL**
+
+**Responsáveis por:**
+
+* Converter imagens para `.bmp` → `.data`
+* Organizar paletas, tamanhos, estilos.
+* Criar o arquivo `info.txt` com instruções pra equipe.
+* Garantir que todos os sprites tenham o mesmo:
+
+  * tamanho
+  * paleta
+  * alinhamento
+  * orientação
+* Testar sprites no simulador (FPGRARS).
+* Ajudar o setor de draw a integrar os assets.
+
+**Arquivos típicos:**
+
+* `assets/`
+* `tools/`
+* `info.txt`
+
+**Perfil ideal:**
+Pessoas que gostam de design, padronização, e configurar ferramentas.
+
+---
+
+# 🎯 **Resumo em uma tabela rápida**
+
+| Setor           | Responsabilidades               | Arquivos              | Perfil            |
+| --------------- | ------------------------------- | --------------------- | ----------------- |
+| **1) Lógica**   | mecânica, input, física, score  | main.asm, logic.asm   | pessoa lógica     |
+| **2) Gráficos** | render, sprites, pixel          | draw.asm, sprites.asm | pessoa visual     |
+| **3) HUD**      | textos, números, interface      | hud.asm, text.asm     | pessoa organizada |
+| **4) Assets**   | conversão, paleta, documentação | info.txt, assets/     | pessoa artística  |
+
+---
+
+# Se quiser, faço um **documento oficial em Markdown (para colocar no GitHub)** com:
+
+* Descrição bonita pros setores
+* Funções de cada setor
+* Requisitos
+* Frases curtas e profissionais
+* Emoji, ícones e estilo clean
+
+É só pedir: **"faz o documento com os setores bonitinho"**.

@@ -1,3 +1,5 @@
+#isso aqui vamo mexer só dps
+
 .data
 
 FILE: .asciz "src/ranking.bin"
