@@ -40,7 +40,7 @@
 # ============ CONFIGURAÇÕES DE INIMIGOS ============
 # Delay entre movimentos dos inimigos (em frames)
 # Quanto maior, mais lento os inimigos se movem
-.eqv ENEMY_DELAY 3
+.eqv ENEMY_DELAY_VAL 3
 
 # Velocidade dos inimigos (pixels por movimento)
 .eqv ENEMY_SPEED 4

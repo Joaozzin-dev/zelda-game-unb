@@ -180,10 +180,21 @@ INIT_MUSIC:
 # 
 # Esta função é non-blocking: executa rapidamente
 # e não trava o jogo.
+# 
+# [CORREÇÃO] Salva registradores S para evitar crash
 #########################################################
 UPDATE_MUSIC:
-    addi sp, sp, -4
-    sw ra, 0(sp)
+    # Salvar registradores na pilha
+    # Precisamos salvar s0-s5 porque esta função os modifica
+    # e s0 é crítico para o loop principal do jogo
+    addi sp, sp, -28
+    sw ra, 24(sp)
+    sw s0, 20(sp)
+    sw s1, 16(sp)
+    sw s2, 12(sp)
+    sw s3, 8(sp)
+    sw s4, 4(sp)
+    sw s5, 0(sp)
     
     # Carregar dados da música
     la s0, MUSIC_DATA
@@ -241,8 +252,15 @@ UPDATE_MUSIC:
     sw s2, 4(s0)
     
     END_UPDATE_MUSIC:
-    lw ra, 0(sp)
-    addi sp, sp, 4
+    # Restaurar registradores da pilha
+    lw s5, 0(sp)
+    lw s4, 4(sp)
+    lw s3, 8(sp)
+    lw s2, 12(sp)
+    lw s1, 16(sp)
+    lw s0, 20(sp)
+    lw ra, 24(sp)
+    addi sp, sp, 28
     ret
 
 #########################################################

@@ -1,5 +1,5 @@
 #########################################################
-# ENEMIES.S - Sistema de Inimigos (Slimes)
+# RIVAL.S - Sistema de Inimigos (Slimes)
 # 
 # Este módulo gerencia o comportamento de todos os inimigos:
 # - Slime 1: Movimento diagonal (ricochete nas paredes)
@@ -38,8 +38,7 @@ UPDATE_ENEMIES:
     addi t1, t1, 1               # Incrementar timer
     
     # Verificar se é hora de mover
-    la t2, ENEMY_DELAY
-    lw t2, 0(t2)                 # t2 = delay configurado (3)
+    li t2, 3                 # t2 = delay configurado (3)
     bge t1, t2, DO_MOVE          # Se timer >= delay, mover
     
     # Ainda não é hora, apenas salvar timer e retornar

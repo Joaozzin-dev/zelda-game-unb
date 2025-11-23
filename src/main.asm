@@ -2,19 +2,29 @@
 # Universidade de Brasília
 # The Legend of Samara - Arquivo Principal
 # 
-# ESTRUTURA DO PROJETO:
-# main.s              - Loop principal e inicialização
-# config/constants.s  - Constantes e configurações
-# config/data.s       - Dados do jogo (vidas, posições, etc)
-# core/game_loop.s    - Loop principal do jogo
-# core/input.s        - Processamento de entrada
-# core/collision.s    - Sistema de colisão
-# graphics/draw.s     - Funções de desenho
-# graphics/hud.s      - Interface (vidas, etc)
-# entities/player.s   - Lógica do jogador
-# entities/enemies.s  - Lógica dos inimigos
-# audio/music.s       - Sistema de música
-# utils/print.s       - Função básica de impressão
+# zelda-game-unb/
+# ├── art/
+# ├── assets/
+# ├── audio/
+# │   └── music.s           ← Sistema de música
+# ├── src/
+# │   ├── core/
+# │   │   ├── collision.s   ← Sistema de colisão
+# │   │   ├── constants.s   ← Constantes
+# │   │   ├── data.s        ← Dados do jogo
+# │   │   ├── game_loop.s   ← Loop principal
+# │   │   └── input.asm     ← Sistema de entrada
+# │   ├── engine/
+# │   │   ├── draw.asm      ← Sistema de desenho
+# │   │   ├── hud.asm       ← Interface (HUD)
+# │   │   └── print.s       ← Função de impressão
+# │   ├── gameplay/
+# │   │   ├── rival.asm     ← Lógica dos inimigos
+# │   │   └── samara.asm    ← Lógica do jogador
+# │   └── guide/
+# ├── sprites/
+# │   └── main.asm          ← Arquivo principal
+# └── fpgrars-x86_64-pc-windows-gnu.exe
 #########################################################
 
 .data
@@ -65,30 +75,28 @@ SETUP:
 # IMPORTS - Incluir todos os módulos do jogo
 #########################################################
 
-# Configurações
-.include "config/constants.s"
-.include "config/data.s"
+# ============ CONFIGURAÇÕES ============
+.include "core/constants.s"
+.include "core/data.s"
 
-# Loop principal
+# ============ NÚCLEO DO JOGO ============
 .include "core/game_loop.s"
-.include "core/input.s"
+.include "core/input.asm"
 .include "core/collision.s"
 
-# Gráficos
-.include "graphics/draw.s"
-.include "graphics/hud.s"
+# ============ ENGINE GRÁFICA ============
+.include "engine/draw.asm"
+.include "engine/hud.asm"
+.include "engine/print.s"
 
-# Entidades
-.include "entities/player.s"
-.include "entities/enemies.s"
+# ============ GAMEPLAY ============
+.include "gameplay/samara.asm"      # Jogador
+.include "gameplay/rival.asm"       # Inimigos
 
-# Áudio
+# ============ ÁUDIO ============
 .include "audio/music.s"
 
-# Utilitários
-.include "utils/print.s"
-
-# Sprites e Assets
+# ============ ASSETS (SPRITES) ============
 .include "sprites/tile.s"
 .include "sprites/map.s"
 .include "sprites/char.s"
@@ -97,3 +105,7 @@ SETUP:
 .include "sprites/ChestY.data"
 .include "sprites/KeyB.data"
 .include "sprites/Game_Over_Menu.data"
+
+#########################################################
+# FIM DO ARQUIVO PRINCIPAL
+#########################################################

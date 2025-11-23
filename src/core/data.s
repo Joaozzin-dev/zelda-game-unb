@@ -29,7 +29,7 @@ PLAYER_SPEED: .word 4
 ENEMY_TIMER: .word 0
 
 # Delay entre movimentos (quantos frames esperar)
-ENEMY_DELAY: .word 3
+ENEMY_DELAY: .word ENEMY_DELAY_VAL
 
 # ============ ITENS COLETÁVEIS (BAÚS) ============
 

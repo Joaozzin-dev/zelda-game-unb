@@ -1,5 +1,5 @@
 #########################################################
-# PLAYER.S - Sistema do Jogador
+# SAMARA.S - Sistema do Jogador
 # 
 # Este módulo gerencia tudo relacionado ao jogador:
 # - Estado (vidas, invulnerabilidade, velocidade)
