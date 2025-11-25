@@ -125,29 +125,9 @@ GAME_LOOP:
     sw a0, 0(t0)
     
     # --- 1. LIMPEZA DO FRAME ATUAL ---
-    bnez s0, LIMPA_FRAME_1
+    call LIMPAR_TELA_TOTAL
+    j LOGICA_JOGO
     
-    LIMPA_FRAME_0:
-        la a0, PLYR_F0
-        call RESTORE_BG
-        la a0, S1_F0
-        call RESTORE_BG
-        la a0, S2_F0
-        call RESTORE_BG
-        la a0, S3_F0
-        call RESTORE_BG
-        j LOGICA_JOGO
-        
-    LIMPA_FRAME_1:
-        la a0, PLYR_F1
-        call RESTORE_BG
-        la a0, S1_F1
-        call RESTORE_BG
-        la a0, S2_F1
-        call RESTORE_BG
-        la a0, S3_F1
-        call RESTORE_BG
-
     LOGICA_JOGO:
     # --- 2. LÓGICA ---
     
@@ -181,6 +161,8 @@ GAME_LOOP:
         li t0, 0xFF200604
         sw s0, 0(t0)
         xori s0, s0, 1
+
+   call LIMPAR_TELA_TOTAL ##printar o fundo novamente
     j GAME_LOOP
 
 #########################################################
@@ -294,9 +276,9 @@ RESTORE_BG:
 DRAW_POS:
     addi sp, sp, -4
     sw ra, 0(sp)
-    lh a1, 0(a0)
-    lh a2, 2(a0)
-    mv a0, a3
+    lh a1, 0(a0)    #a1 = x
+    lh a2, 2(a0)    #a2 = y
+    mv a0, a3       # a0 = caractere
     mv a3, s0
     call PRINT
     lw ra, 0(sp)
