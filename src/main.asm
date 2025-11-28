@@ -1,6 +1,6 @@
 #########################################################
 # Universidade de Brasília
-# The legend of Samara - VERSÃO FINAL (Português Corrigido)
+# The legend of Samara 
 #########################################################
 
 .data
@@ -57,16 +57,16 @@ LEVEL_HIT_MAP:
 .byte 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 
 .byte 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1 
 .byte 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1 
+.byte 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1 
+.byte 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1 
+.byte 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1 
+.byte 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1 
+.byte 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1 
+.byte 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1 
 .byte 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1 
 .byte 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1 
-.byte 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1 
-.byte 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1 
-.byte 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1 
-.byte 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1 
-.byte 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1 
-.byte 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1 
-.byte 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1 
-.byte 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1 
+.byte 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1 
+.byte 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1 
 .byte 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1 
 .byte 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 
 
@@ -226,6 +226,106 @@ IMPRIMIR_TELA_CHEIA:
 DESENHAR_TUDO:
     addi sp, sp, -4
     sw ra, 0(sp)
+
+    # --- 1. AS PAREDES VÊM PRIMEIRO ---
+    call DESENHAR_CENARIO_HITBOX 
+
+    # --- 2. DEPOIS OS ITENS ---
+    la t0, ITEM_VELO
+    lh t1, 4(t0)
+    beqz t1, VERIFICAR_VIDA
+    la a0, ITEM_VELO
+    la a3, ChestB
+    call DESENHAR_POSICAO
+    
+    VERIFICAR_VIDA:
+    la t0, ITEM_VIDA
+    lh t1, 4(t0)
+    beqz t1, DESENHAR_ENTIDADES
+    la a0, ITEM_VIDA
+    la a3, ChestY
+    call DESENHAR_POSICAO
+
+    DESENHAR_ENTIDADES:
+    # --- 3. DEPOIS O JOGADOR ---
+    la t0, INVULNERAVEL
+    lw t1, 0(t0)
+    andi t1, t1, 4
+    bnez t1, PULAR_JOGADOR
+    la a0, SAMARA_POS
+    la a3, char
+    call DESENHAR_POSICAO
+    PULAR_JOGADOR:
+
+    # --- 4. POR ÚLTIMO OS INIMIGOS ---
+    la a0, BISPO_POS
+    la a3, Water_Slime_Front
+    call DESENHAR_POSICAO
+    
+    la a0, CASTELO_POS
+    la a3, Water_Slime_Front
+    call DESENHAR_POSICAO
+    
+    la a0, CAVALO_POS
+    la a3, Water_Slime_Front
+    call DESENHAR_POSICAO
+    
+    lw ra, 0(sp)
+    addi sp, sp, 4
+    ret
+
+# ==========================================
+# FUNÇÃO SEPARADA: DESENHA PAREDES
+# ==========================================
+DESENHAR_CENARIO_HITBOX:
+    addi sp, sp, -4
+    sw ra, 0(sp)
+
+    la t0, LEVEL_HIT_MAP    # Endereço do mapa
+    li t1, 0                # Contador de índice (0 a 299)
+    li t2, 300              # Total de tiles (20x15 = 300)
+
+    LOOP_DESENHA_MAPA:
+        beq t1, t2, FIM_DESENHA_MAPA # Acabou o array?
+        
+        lb t3, 0(t0)        # Lê o byte (0 ou 1)
+        beqz t3, PROXIMO_TILE # Se for 0, pula
+
+        # Calcula X e Y
+        li t4, 20
+        rem a1, t1, t4      # Coluna
+        slli a1, a1, 4      # X = Coluna * 16
+        
+        div a2, t1, t4      # Linha
+        slli a2, a2, 4      # Y = Linha * 16
+
+        # IMPORTANTE: Use um sprite pequeno (16x16) aqui. 
+        # Se 'tile' for o fundo grande, vai travar o jogo.
+        # Se não tiver 'wall', use 'tile' mas garanta que ele é 16x16.
+        la a0, tile          
+        mv a3, s0           
+        
+        addi sp, sp, -12
+        sw t0, 0(sp)
+        sw t1, 4(sp)
+        sw t2, 8(sp)
+        
+        call IMPRIMIR
+        
+        lw t0, 0(sp)
+        lw t1, 4(sp)
+        lw t2, 8(sp)
+        addi sp, sp, 12
+
+    PROXIMO_TILE:
+        addi t0, t0, 1
+        addi t1, t1, 1
+        j LOOP_DESENHA_MAPA
+
+    FIM_DESENHA_MAPA:
+    lw ra, 0(sp)
+    addi sp, sp, 4
+    ret
 
     # --- Desenha Baú de Velocidade (se não pegou ainda) ---
     la t0, ITEM_VELO
@@ -513,20 +613,55 @@ VERIFICAR_COLISAO_CAIXA:
     SEM_COLISAO: 
     li a0, 0      # Não bateu
     ret
+# ==========================================
+# VERIFICAR SE PIXEL ESTÁ EM PAREDE
+# Entrada: a0 = X, a1 = Y
+# Saída: a0 = 1 (Bateu), 0 (Livre)
+# ==========================================
+CHECK_MAP_COLLISION:
+    # Converter Pixel para Grid (Dividir por 16 é shift right 4)
+    srli t0, a0, 4      # Coluna = X / 16
+    srli t1, a1, 4      # Linha = Y / 16
+    
+    # Proteção de índices (pra não sair do array)
+    li t2, 20
+    bge t0, t2, DEU_COLISAO # X fora do mapa
+    li t2, 15
+    bge t1, t2, DEU_COLISAO # Y fora do mapa
+
+    # Calcular Índice no Array: (Linha * 20) + Coluna
+    li t2, 20
+    mul t1, t1, t2      # Linha * 20
+    add t0, t0, t1      # + Coluna
+    
+    la t3, LEVEL_HIT_MAP
+    add t3, t3, t0      # Endereço Base + Offset
+    lb t4, 0(t3)        # Carrega o valor (0 ou 1)
+    
+    mv a0, t4           # Retorna o valor
+    ret
+
+    DEU_COLISAO:
+    li a0, 1
+    ret
 
 #########################################################
-# INPUT E MOVIMENTOS
+# INPUT E MOVIMENTOS (COM PROTEÇÃO DE PILHA)
 #########################################################
 VERIFICAR_ENTRADA:
-    li t1, 0xFF200000  # Endereço MMIO do Teclado
+    # 1. Salvar RA na pilha (OBRIGATÓRIO pq chamamos outra função dentro)
+    addi sp, sp, -4
+    sw ra, 0(sp)
+
+    li t1, 0xFF200000
     lw t0, 0(t1)
-    andi t0, t0, 1     # Tem tecla apertada?
-    beqz t0, RETORNAR_ENTRADA
-    lw t2, 4(t1)       # Qual tecla?
-    la t0, VELO_SAMARA
-    lw t3, 0(t0)       # Carrega velocidade
+    andi t0, t0, 1
+    beqz t0, RETORNAR_ENTRADA # Se não tem tecla, sai
+    lw t2, 4(t1)
     
-    # Compara ASCII
+    la t0, VELO_SAMARA
+    lw t3, 0(t0)
+    
     li t0, 'w'
     beq t2, t0, MOVER_CIMA
     li t0, 's'
@@ -539,38 +674,185 @@ VERIFICAR_ENTRADA:
 
     MOVER_CIMA: 
         la t0, SAMARA_POS
-        lh t1, 2(t0)
-        sub t1, t1, t3
-        li t5, 8              # Limite superior da tela
-        blt t1, t5, RETORNAR_ENTRADA
-        sh t1, 2(t0)
+        lh t2, 0(t0)      # X atual
+        lh t1, 2(t0)      # Y atual
+        sub t1, t1, t3    # Y Futuro
+        
+        # Salva contexto antes de checar colisão
+        addi sp, sp, -16
+        sw t0, 0(sp)
+        sw t1, 4(sp)
+        sw t2, 8(sp)
+        sw t3, 12(sp)
+
+        # Checa Canto Superior Esquerdo
+        mv a0, t2
+        mv a1, t1
+        call CHECK_MAP_COLLISION
+        mv t5, a0 
+
+        # Checa Canto Superior Direito
+        lw t2, 8(sp)
+        mv a0, t2
+        addi a0, a0, 14
+        lw a1, 4(sp)
+        
+        # Salva t5 rápido
+        addi sp, sp, -4
+        sw t5, 0(sp)
+        call CHECK_MAP_COLLISION
+        lw t5, 0(sp)
+        addi sp, sp, 4
+
+        or t5, t5, a0 # Se bater em qualquer um, t5 vira 1
+        
+        # Restaura tudo
+        lw t3, 12(sp)
+        lw t2, 8(sp)
+        lw t1, 4(sp)
+        lw t0, 0(sp)
+        addi sp, sp, 16
+
+        bnez t5, RETORNAR_ENTRADA # Se bateu, não salva posição
+        sh t1, 2(t0)              # Se livre, salva Y
         j RETORNAR_ENTRADA
+
     MOVER_BAIXO: 
         la t0, SAMARA_POS
+        lh t2, 0(t0)
         lh t1, 2(t0)
         add t1, t1, t3
-        li t5, 216            # Limite inferior
-        bgt t1, t5, RETORNAR_ENTRADA
+        
+        addi sp, sp, -16
+        sw t0, 0(sp)
+        sw t1, 4(sp)
+        sw t2, 8(sp)
+        sw t3, 12(sp)
+
+        # Checa Canto Inferior Esquerdo
+        mv a0, t2
+        mv a1, t1
+        addi a1, a1, 14
+        call CHECK_MAP_COLLISION
+        mv t5, a0
+
+        # Checa Canto Inferior Direito
+        lw t2, 8(sp)
+        mv a0, t2
+        addi a0, a0, 14
+        lw a1, 4(sp)
+        addi a1, a1, 14
+        
+        addi sp, sp, -4
+        sw t5, 0(sp)
+        call CHECK_MAP_COLLISION
+        lw t5, 0(sp)
+        addi sp, sp, 4
+
+        or t5, t5, a0
+
+        lw t3, 12(sp)
+        lw t2, 8(sp)
+        lw t1, 4(sp)
+        lw t0, 0(sp)
+        addi sp, sp, 16
+
+        bnez t5, RETORNAR_ENTRADA
         sh t1, 2(t0)
         j RETORNAR_ENTRADA
+
     MOVER_ESQUERDA: 
         la t0, SAMARA_POS
         lh t1, 0(t0)
+        lh t2, 2(t0)
         sub t1, t1, t3
-        li t5, 8              # Limite esquerdo
-        blt t1, t5, RETORNAR_ENTRADA
+        
+        addi sp, sp, -16
+        sw t0, 0(sp)
+        sw t1, 4(sp)
+        sw t2, 8(sp)
+        sw t3, 12(sp)
+
+        # Checa Canto Sup Esq
+        mv a0, t1
+        mv a1, t2
+        call CHECK_MAP_COLLISION
+        mv t5, a0
+
+        # Checa Canto Inf Esq
+        lw t1, 4(sp)
+        mv a0, t1
+        lw t2, 8(sp)
+        mv a1, t2
+        addi a1, a1, 14
+        
+        addi sp, sp, -4
+        sw t5, 0(sp)
+        call CHECK_MAP_COLLISION
+        lw t5, 0(sp)
+        addi sp, sp, 4
+
+        or t5, t5, a0
+
+        lw t3, 12(sp)
+        lw t2, 8(sp)
+        lw t1, 4(sp)
+        lw t0, 0(sp)
+        addi sp, sp, 16
+
+        bnez t5, RETORNAR_ENTRADA
         sh t1, 0(t0)
         j RETORNAR_ENTRADA
+
     MOVER_DIREITA: 
         la t0, SAMARA_POS
         lh t1, 0(t0)
+        lh t2, 2(t0)
         add t1, t1, t3
-        li t5, 296            # Limite direito
-        bgt t1, t5, RETORNAR_ENTRADA
+        
+        addi sp, sp, -16
+        sw t0, 0(sp)
+        sw t1, 4(sp)
+        sw t2, 8(sp)
+        sw t3, 12(sp)
+
+        # Checa Canto Sup Dir
+        mv a0, t1
+        addi a0, a0, 14
+        mv a1, t2
+        call CHECK_MAP_COLLISION
+        mv t5, a0
+
+        # Checa Canto Inf Dir
+        lw t1, 4(sp)
+        mv a0, t1
+        addi a0, a0, 14
+        lw t2, 8(sp)
+        mv a1, t2
+        addi a1, a1, 14
+        
+        addi sp, sp, -4
+        sw t5, 0(sp)
+        call CHECK_MAP_COLLISION
+        lw t5, 0(sp)
+        addi sp, sp, 4
+
+        or t5, t5, a0
+
+        lw t3, 12(sp)
+        lw t2, 8(sp)
+        lw t1, 4(sp)
+        lw t0, 0(sp)
+        addi sp, sp, 16
+
+        bnez t5, RETORNAR_ENTRADA
         sh t1, 0(t0)
         j RETORNAR_ENTRADA
     
     RETORNAR_ENTRADA:
+    # 2. Restaurar RA da pilha antes de sair
+    lw ra, 0(sp)
+    addi sp, sp, 4
     ret
 
 # ATUALIZAÇÃO DE INIMIGOS (INDEPENDENTE)
@@ -601,145 +883,371 @@ ATUALIZAR_INIMIGOS:
     addi sp, sp, 4
     ret
 
-# CAVALO (Movimento em L)
-# Lógica: Anda X frames em um eixo, depois troca pro outro eixo
+# CAVALO 
 MOVER_CAVALO:
-    la a0, CAVALO_POS
-    la a1, CAVALO_STATE    # Estado (0 ou 1)
-    la a2, CAVALO_CONT     # Contador de passos
-    lw t0, 0(a1)
-    lw t1, 0(a2)
-    la t6, CAVALO_X 
-    la t5, CAVALO_Y
+    addi sp, sp, -4
+    sw ra, 0(sp)
+
+    # Carrega Estado e Contador
+    la a1, CAVALO_STATE
+    la a2, CAVALO_CONT
+    lw t0, 0(a1)        # t0 = Estado (0=Y, 1=X)
+    lw t1, 0(a2)        # t1 = Contador de passos
     
-    bnez t0, CAVALO_MOVER_Y # Se estado != 0, vai pra Y
-    
+    # Decide se move X ou Y
+    bnez t0, CAVALO_MOVER_Y 
+
+    # ========================
+    # MOVIMENTO EIXO X (Estado 0)
+    # ========================
     CAVALO_MOVER_X:
-        lw t3, 0(t6) # Vel X
-        lh t4, 0(a0)
-        add t4, t4, t3
+        la t6, CAVALO_X
+        lw t3, 0(t6)        # t3 = Vel X
+        la a0, CAVALO_POS
+        lh t4, 0(a0)        # t4 = X Atual
+        add t4, t4, t3      # t4 = X Futuro
         
-        # Checa limites X
+        # --- COLISÃO X ---
+        # Salva t0 (Estado) e t1 (Contador) na pilha para não perder
+        addi sp, sp, -12
+        sw t0, 0(sp)
+        sw t1, 4(sp)
+        sw t4, 8(sp) # Salva X Futuro
+
+        # Prepara Check
+        mv a0, t4
+        blt t3, zero, CHK_C_X_ESQ
+        addi a0, a0, 14     # Se direita, checa lado direito
+        CHK_C_X_ESQ:
+        la t2, CAVALO_POS
+        lh a1, 2(t2)        # Y Atual
+        addi a1, a1, 8      # Meio da altura
+        call CHECK_MAP_COLLISION
+        
+        # O resultado da colisão está em a0
+        mv t5, a0 
+
+        # Restaura
+        lw t4, 8(sp)
+        lw t1, 4(sp)
+        lw t0, 0(sp)
+        addi sp, sp, 12
+
+        # Se bateu parede (t5=1), trata colisão
+        bnez t5, CAVALO_BATEU_X
+        
+        # Se bateu borda tela, trata colisão
         li t2, 296
-        bge t4, t2, CAVALO_COLIDIU_X
+        bge t4, t2, CAVALO_BATEU_X
         li t2, 8
-        blt t4, t2, CAVALO_COLIDIU_X
+        blt t4, t2, CAVALO_BATEU_X
         
-        sh t4, 0(a0)       # Salva nova pos
-        addi t1, t1, 1
-        li t2, 30          # Anda 30 'passos' antes de virar
-        blt t1, t2, CAVALO_SALVAR
-        # Troca Eixo (vira na esquina)
-        li t1, 0           # Reseta contador
-        li t0, 1           # Muda estado pra Y
+        # --- MOVIMENTO LIVRE ---
+        la a0, CAVALO_POS
+        sh t4, 0(a0)        # Atualiza X
+        
+        addi t1, t1, 1      # Incrementa contador
+        li t2, 30
+        blt t1, t2, CAVALO_SAIR # Se < 30, só sai
+        
+        # Timer estourou: Troca Eixo
+        li t1, 0            # Zera contador
+        li t0, 1            # Muda estado para Y
         j CAVALO_SALVAR_ESTADO
         
-        CAVALO_COLIDIU_X: 
-        sub t3, zero, t3   # Inverte direção
+        # --- BATEU ---
+        CAVALO_BATEU_X: 
+        la t6, CAVALO_X
+        lw t3, 0(t6)
+        sub t3, zero, t3    # Inverte Vel
         sw t3, 0(t6)
-        li t1, 0           # Reseta contador
-        li t0, 1           # Muda pra Y
+        
+        li t1, 0            # Zera contador
+        li t0, 1            # Força troca para Y
         j CAVALO_SALVAR_ESTADO
 
+    # ========================
+    # MOVIMENTO EIXO Y (Estado 1)
+    # ========================
     CAVALO_MOVER_Y:
-        lw t3, 0(t5) # Vel Y
-        lh t4, 2(a0)
-        add t4, t4, t3
+        la t5, CAVALO_Y
+        lw t3, 0(t5)        # t3 = Vel Y
+        la a0, CAVALO_POS
+        lh t4, 2(a0)        # t4 = Y Atual
+        add t4, t4, t3      # t4 = Y Futuro
         
-        # Checa limites Y
+        # --- COLISÃO Y ---
+        addi sp, sp, -12
+        sw t0, 0(sp)
+        sw t1, 4(sp)
+        sw t4, 8(sp)
+
+        # Prepara Check
+        la t2, CAVALO_POS
+        lh a0, 0(t2)        # X Atual
+        addi a0, a0, 8      # Meio da largura
+        mv a1, t4           # Y Futuro
+        blt t3, zero, CHK_C_Y_CIMA
+        addi a1, a1, 14     # Se baixo, checa pé
+        CHK_C_Y_CIMA:
+        call CHECK_MAP_COLLISION
+        
+        mv t5, a0           # Resultado
+
+        lw t4, 8(sp)
+        lw t1, 4(sp)
+        lw t0, 0(sp)
+        addi sp, sp, 12
+
+        # Colisões
+        bnez t5, CAVALO_BATEU_Y
         li t2, 216
-        bge t4, t2, CAVALO_COLIDIU_Y
+        bge t4, t2, CAVALO_BATEU_Y
         li t2, 8
-        blt t4, t2, CAVALO_COLIDIU_Y
+        blt t4, t2, CAVALO_BATEU_Y
         
-        sh t4, 2(a0)
+        # --- MOVIMENTO LIVRE ---
+        la a0, CAVALO_POS
+        sh t4, 2(a0)        # Atualiza Y
+        
         addi t1, t1, 1
         li t2, 30
-        blt t1, t2, CAVALO_SALVAR
-        # Troca Eixo
+        blt t1, t2, CAVALO_SAIR
+        
+        # Timer estourou: Troca Eixo
         li t1, 0
-        li t0, 0           # Muda estado pra X
+        li t0, 0            # Muda estado para X
         j CAVALO_SALVAR_ESTADO
 
-        CAVALO_COLIDIU_Y:
+        # --- BATEU ---
+        CAVALO_BATEU_Y:
+        la t5, CAVALO_Y
+        lw t3, 0(t5)
         sub t3, zero, t3
         sw t3, 0(t5)
+        
         li t1, 0
-        li t0, 0
+        li t0, 0            # Força troca para X
         j CAVALO_SALVAR_ESTADO
 
+    # ========================
+    # SALVAR E SAIR
+    # ========================
     CAVALO_SALVAR_ESTADO: 
-    sw t0, 0(a1)
-    CAVALO_SALVAR: 
-    sw t1, 0(a2)
-    ret
+    la a1, CAVALO_STATE
+    sw t0, 0(a1)        # Salva novo Estado
+    # Cai no salvar contador...
 
-# CASTELO (Movimento Horizontal - Bate e Volta)
+    CAVALO_SAIR:
+    la a2, CAVALO_CONT
+    sw t1, 0(a2)        # Salva novo Contador
+    
+    lw ra, 0(sp)
+    addi sp, sp, 4
+    ret
+# CASTELO 
 MOVER_CASTELO:
+    addi sp, sp, -4
+    sw ra, 0(sp)      # 1. Salva o retorno (RA)
+
     la a0, CASTELO_POS
     la a1, CASTELO_X
-    lh t0, 0(a0)
-    lw t2, 0(a1)
-    add t0, t0, t2
+    lh t0, 0(a0)      # X Atual
+    lw t2, 0(a1)      # Velocidade
+    add t0, t0, t2    # X Futuro (Tentativa)
+
+    # --- CHECK 1: Canto Esquerdo (X_Futuro, Y) ---
+    # Salva registradores importantes antes de chamar função
+    addi sp, sp, -16
+    sw t0, 0(sp)
+    sw t2, 4(sp)
+    sw a0, 8(sp)
+    sw a1, 12(sp)
+
+    mv a0, t0           # Argumento X: X Futuro
+    la t5, CASTELO_POS
+    lh a1, 2(t5)        # Argumento Y: Y Atual
+    addi a1, a1, 8      # (+8) Pega o meio da altura pra não prender no chão
+    call CHECK_MAP_COLLISION
+    mv t5, a0           # t5 = Resultado Check 1
+
+    # --- CHECK 2: Canto Direito (X_Futuro + 14, Y) ---
+    lw t0, 0(sp)        # Recupera X Futuro da pilha
+    mv a0, t0
+    addi a0, a0, 14     # Checa o lado direito (largura do sprite)
+    la t6, CASTELO_POS
+    lh a1, 2(t6)
+    addi a1, a1, 8      # Altura média
+    
+    # Salva t5 na pilha rapidinho
+    addi sp, sp, -4
+    sw t5, 0(sp)
+    call CHECK_MAP_COLLISION
+    lw t5, 0(sp)
+    addi sp, sp, 4
+
+    or t5, t5, a0       # t5 = (Bateu Esq) OU (Bateu Dir)
+
+    # Restaura tudo da pilha
+    lw a1, 12(sp)
+    lw a0, 8(sp)
+    lw t2, 4(sp)
+    lw t0, 0(sp)
+    addi sp, sp, 16
+
+    # Se bateu no mapa (t5 != 0), inverte a direção
+    bnez t5, INVERTER_CASTELO
+
+    # Check Bordas da Tela (Segurança extra)
     li t3, 296
-    bge t0, t3, INVERTER_CASTELO # Direita
+    bge t0, t3, INVERTER_CASTELO
     li t3, 8
-    blt t0, t3, INVERTER_CASTELO # Esquerda
-    sh t0, 0(a0)
+    blt t0, t3, INVERTER_CASTELO
+    
+    sh t0, 0(a0) # Se livre, salva movimento
+    
+    lw ra, 0(sp)      # Restaura RA
+    addi sp, sp, 4
     ret
+    
     INVERTER_CASTELO: 
-    sub t2, zero, t2  # Inverte sinal
+    sub t2, zero, t2  # Inverte velocidade
     sw t2, 0(a1)
-    add t0, t0, t2
-    add t0, t0, t2    # Desencalha da parede
-    sh t0, 0(a0)
+    
+    lw ra, 0(sp)      # Restaura RA
+    addi sp, sp, 4
     ret
 
-# BISPO (Movimento Diagonal - Quica nas paredes)
-# X e Y são independentes
+# BISPO 
 MOVER_BISPO:
+    addi sp, sp, -4
+    sw ra, 0(sp)
+
+    # Carrega dados iniciais
     la a0, BISPO_POS
     la a1, BISPO_X
     la a2, BISPO_Y
-    lh t0, 0(a0)      # Pos X
-    lh t1, 2(a0)      # Pos Y
+    lh t0, 0(a0)      # X Atual
+    lh t1, 2(a0)      # Y Atual
     lw t2, 0(a1)      # Vel X
     lw t3, 0(a2)      # Vel Y
-    add t0, t0, t2
-    add t1, t1, t3
+
+    # ==========================
+    # MOVIMENTO X
+    # ==========================
+    add t4, t0, t2    # t4 = X Futuro
     
-    # Checa X
-    li t4, 296
-    bge t0, t4, INVERTER_BISPO_X
-    li t4, 8
-    blt t0, t4, INVERTER_BISPO_X
-    j VERIFICAR_BISPO_Y
-    INVERTER_BISPO_X: 
-    sub t2, zero, t2
-    sw t2, 0(a1)
-    add t0, t0, t2
-    add t0, t0, t2
+    # Salva contexto na pilha
+    addi sp, sp, -20
+    sw t0, 0(sp)
+    sw t1, 4(sp)
+    sw t2, 8(sp)
+    sw t3, 12(sp)
+    sw t4, 16(sp)     # Salva X Futuro
+
+    # Prepara Check X
+    mv a0, t4         # Testar X Futuro
+    blt t2, zero, CHK_B_X
+    addi a0, a0, 14   # Se direita, testa borda direita
+    CHK_B_X:
+    la t6, BISPO_POS
+    lh a1, 2(t6)      # Y Atual
+    addi a1, a1, 8    # Altura média
+    call CHECK_MAP_COLLISION
+    mv t5, a0         # t5 = Colidiu?
+
+    # Restaura
+    lw t4, 16(sp)
+    lw t3, 12(sp)
+    lw t2, 8(sp)
+    lw t1, 4(sp)
+    lw t0, 0(sp)
+    addi sp, sp, 20
+
+    # Lógica de Colisão X
+    bnez t5, INVERTER_BISPO_X
     
-    VERIFICAR_BISPO_Y:
-    # Checa Y
-    li t4, 216
-    bge t1, t4, INVERTER_BISPO_Y
-    li t4, 8
-    blt t1, t4, INVERTER_BISPO_Y
-    j SALVAR_BISPO
-    INVERTER_BISPO_Y: 
-    sub t3, zero, t3
+    # Check Bordas Tela X
+    li t6, 296
+    bge t4, t6, INVERTER_BISPO_X
+    li t6, 8
+    blt t4, t6, INVERTER_BISPO_X
+    
+    # Se livre, aceita novo X
+    mv t0, t4
+    j FIM_BISPO_X
+
+    INVERTER_BISPO_X:
+    sub t2, zero, t2  # Inverte Vel X
+    la a1, BISPO_X    # <--- RECARREGA ENDEREÇO (Segurança)
+    sw t2, 0(a1)      # Salva Vel X
+    # t0 continua sendo o X antigo (não anda)
+
+    FIM_BISPO_X:
+
+    # ==========================
+    # MOVIMENTO Y
+    # ==========================
+    add t4, t1, t3    # t4 = Y Futuro
+    
+    # Salva contexto
+    addi sp, sp, -20
+    sw t0, 0(sp)
+    sw t1, 4(sp)
+    sw t2, 8(sp)
+    sw t3, 12(sp)
+    sw t4, 16(sp)
+
+    # Prepara Check Y
+    mv a1, t4         # Testar Y Futuro
+    blt t3, zero, CHK_B_Y
+    addi a1, a1, 14   # Se baixo, testa pé
+    CHK_B_Y:
+    # Usa o t0 (X já atualizado) para o teste ficar fluido
+    mv a0, t0         
+    addi a0, a0, 8    # Meio do corpo
+    call CHECK_MAP_COLLISION
+    mv t5, a0
+
+    # Restaura
+    lw t4, 16(sp)
+    lw t3, 12(sp)
+    lw t2, 8(sp)
+    lw t1, 4(sp)
+    lw t0, 0(sp)
+    addi sp, sp, 20
+
+    # Lógica de Colisão Y
+    bnez t5, INVERTER_BISPO_Y
+    
+    # Check Bordas Tela Y
+    li t6, 216
+    bge t4, t6, INVERTER_BISPO_Y
+    li t6, 8
+    blt t4, t6, INVERTER_BISPO_Y
+    
+    # Se livre, aceita novo Y
+    mv t1, t4
+    j FIM_BISPO_Y
+
+    INVERTER_BISPO_Y:
+    sub t3, zero, t3  # Inverte Vel Y
+    la a2, BISPO_Y    # <--- RECARREGA ENDEREÇO
     sw t3, 0(a2)
-    add t1, t1, t3
-    add t1, t1, t3
+    # t1 continua sendo o Y antigo
+
+    FIM_BISPO_Y:
     
-    SALVAR_BISPO:
+    # Salva Posição Final
+    la a0, BISPO_POS  # <--- RECARREGA ENDEREÇO
     sh t0, 0(a0)
     sh t1, 2(a0)
-    ret
 
+    lw ra, 0(sp)
+    addi sp, sp, 4
+    ret
 #########################################################
-# IMPRIMIR (CORRIGIDO)
+# IMPRIMIR
 # Função genérica pra pintar sprite na tela
 #########################################################
 IMPRIMIR:
