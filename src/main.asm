@@ -13,6 +13,8 @@ TEMPO_DE_EXECUCAO:     .word 0  # Guarda o tempo do último frame
 VIDAS:        .word 3           # Começa com 3 vidas
 INVULNERAVEL: .word 0           # Contador de invencibilidade (tempo piscando)
 VELO_SAMARA: .word 4            # Velocidade da boneca (pixels por frame)
+SAMARA_FRAME_ANIMACAO: .word char  # # Guarda o endereço de memória atual do sprite (começa no início de 'char')
+SAMARA_ANIM_CONT: .word 0     # Contador para não trocar frame rápido demais
 
 # Timer para inimigos (Independente)
 TEMP_RIVAL:  .word 0            # Cronômetro interno dos bichos
@@ -86,6 +88,11 @@ SETUP:
     li t1, 4
     sw t1, 0(t0)
     
+    # --- RESET DA ANIMAÇÃO TBM ---
+    la t0, SAMARA_FRAME_ANIMACAO
+    la t1, char           # Carrega o endereço do início do arquivo de sprite
+    sw t1, 0(t0)          # Salva na variável para começar do frame 0
+
     # --- Zera o timer dos inimigos ---
     la t0, TEMP_RIVAL
     sw zero, 0(t0)
@@ -253,7 +260,8 @@ DESENHAR_TUDO:
     andi t1, t1, 4
     bnez t1, PULAR_JOGADOR
     la a0, SAMARA_POS
-    la a3, char
+    la t0, SAMARA_FRAME_ANIMACAO
+    lw a3, 0(t0)            # Carrega o quadro atual (char + offset)
     call DESENHAR_POSICAO
     PULAR_JOGADOR:
 
@@ -517,6 +525,7 @@ VERIFICAR_COLISOES:
         beqz t1, VERIFICAR_DANO   # Se já pegou, ignora
         li t1, 0
         sh t1, 4(t0)              # Marca como pego (0)
+        call TOCAR_SOM_COLETA
         la a0, ITEM_VELO
         call LIMPAR_FUNDO_ITEM
         la t0, VELO_SAMARA
@@ -530,6 +539,7 @@ VERIFICAR_COLISOES:
         beqz t1, VERIFICAR_DANO
         li t1, 0
         sh t1, 4(t0)              # Marca como pego
+        call TOCAR_SOM_COLETA
         la a0, ITEM_VIDA
         call LIMPAR_FUNDO_ITEM
         la t0, VIDAS
@@ -645,23 +655,28 @@ CHECK_MAP_COLLISION:
     li a0, 1
     ret
 
-#########################################################
-# INPUT E MOVIMENTOS (COM PROTEÇÃO DE PILHA)
-#########################################################
+# =========================================================
+# VERIFICAR ENTRADA (COM COLISÃO E ANIMAÇÃO INTEGRADA)
+# =========================================================
 VERIFICAR_ENTRADA:
-    # 1. Salvar RA na pilha (OBRIGATÓRIO pq chamamos outra função dentro)
+    # 1. Salvar RA na pilha
     addi sp, sp, -4
     sw ra, 0(sp)
 
+    # Verifica se há tecla pressionada
     li t1, 0xFF200000
     lw t0, 0(t1)
     andi t0, t0, 1
-    beqz t0, RETORNAR_ENTRADA # Se não tem tecla, sai
+    beqz t0, RETORNAR_ENTRADA
     lw t2, 4(t1)
     
+    # Carrega velocidade
     la t0, VELO_SAMARA
     lw t3, 0(t0)
     
+    li t6, 0    # <--- FLAG: 0 = Parado, 1 = Andou
+    
+    # Verifica qual tecla foi apertada
     li t0, 'w'
     beq t2, t0, MOVER_CIMA
     li t0, 's'
@@ -672,13 +687,16 @@ VERIFICAR_ENTRADA:
     beq t2, t0, MOVER_DIREITA
     j RETORNAR_ENTRADA
 
+    # -----------------------------------------------------
+    # MOVIMENTO CIMA (W)
+    # -----------------------------------------------------
     MOVER_CIMA: 
         la t0, SAMARA_POS
         lh t2, 0(t0)      # X atual
         lh t1, 2(t0)      # Y atual
         sub t1, t1, t3    # Y Futuro
         
-        # Salva contexto antes de checar colisão
+        # -- Salva contexto antes da colisão --
         addi sp, sp, -16
         sw t0, 0(sp)
         sw t1, 4(sp)
@@ -694,29 +712,34 @@ VERIFICAR_ENTRADA:
         # Checa Canto Superior Direito
         lw t2, 8(sp)
         mv a0, t2
-        addi a0, a0, 14
+        addi a0, a0, 14   # +14 pixels (largura do boneco)
         lw a1, 4(sp)
         
-        # Salva t5 rápido
         addi sp, sp, -4
         sw t5, 0(sp)
         call CHECK_MAP_COLLISION
         lw t5, 0(sp)
         addi sp, sp, 4
+        or t5, t5, a0     # Se bateu em qualquer um dos dois, t5 = 1
 
-        or t5, t5, a0 # Se bater em qualquer um, t5 vira 1
-        
-        # Restaura tudo
+        # -- Restaura contexto --
         lw t3, 12(sp)
         lw t2, 8(sp)
         lw t1, 4(sp)
         lw t0, 0(sp)
         addi sp, sp, 16
 
-        bnez t5, RETORNAR_ENTRADA # Se bateu, não salva posição
-        sh t1, 2(t0)              # Se livre, salva Y
-        j RETORNAR_ENTRADA
+        # Se bateu (t5 != 0), sai sem salvar e sem animar
+        bnez t5, RETORNAR_ENTRADA 
+        
+        # Se livre:
+        sh t1, 2(t0)      # Salva novo Y na memória
+        li t6, 1          # <--- MARCA QUE ANDOU!
+        j PROCESSAR_ANIMACAO
 
+    # -----------------------------------------------------
+    # MOVIMENTO BAIXO (S)
+    # -----------------------------------------------------
     MOVER_BAIXO: 
         la t0, SAMARA_POS
         lh t2, 0(t0)
@@ -732,7 +755,7 @@ VERIFICAR_ENTRADA:
         # Checa Canto Inferior Esquerdo
         mv a0, t2
         mv a1, t1
-        addi a1, a1, 14
+        addi a1, a1, 14   # +14 pixels (pé do boneco)
         call CHECK_MAP_COLLISION
         mv t5, a0
 
@@ -748,7 +771,6 @@ VERIFICAR_ENTRADA:
         call CHECK_MAP_COLLISION
         lw t5, 0(sp)
         addi sp, sp, 4
-
         or t5, t5, a0
 
         lw t3, 12(sp)
@@ -758,9 +780,14 @@ VERIFICAR_ENTRADA:
         addi sp, sp, 16
 
         bnez t5, RETORNAR_ENTRADA
+        
         sh t1, 2(t0)
-        j RETORNAR_ENTRADA
+        li t6, 1          # <--- MARCA QUE ANDOU!
+        j PROCESSAR_ANIMACAO
 
+    # -----------------------------------------------------
+    # MOVIMENTO ESQUERDA (A)
+    # -----------------------------------------------------
     MOVER_ESQUERDA: 
         la t0, SAMARA_POS
         lh t1, 0(t0)
@@ -773,13 +800,13 @@ VERIFICAR_ENTRADA:
         sw t2, 8(sp)
         sw t3, 12(sp)
 
-        # Checa Canto Sup Esq
+        # Checa Canto Superior Esquerdo
         mv a0, t1
         mv a1, t2
         call CHECK_MAP_COLLISION
         mv t5, a0
 
-        # Checa Canto Inf Esq
+        # Checa Canto Inferior Esquerdo
         lw t1, 4(sp)
         mv a0, t1
         lw t2, 8(sp)
@@ -791,7 +818,6 @@ VERIFICAR_ENTRADA:
         call CHECK_MAP_COLLISION
         lw t5, 0(sp)
         addi sp, sp, 4
-
         or t5, t5, a0
 
         lw t3, 12(sp)
@@ -801,9 +827,14 @@ VERIFICAR_ENTRADA:
         addi sp, sp, 16
 
         bnez t5, RETORNAR_ENTRADA
+        
         sh t1, 0(t0)
-        j RETORNAR_ENTRADA
+        li t6, 1          # <--- MARCA QUE ANDOU!
+        j PROCESSAR_ANIMACAO
 
+    # -----------------------------------------------------
+    # MOVIMENTO DIREITA (D)
+    # -----------------------------------------------------
     MOVER_DIREITA: 
         la t0, SAMARA_POS
         lh t1, 0(t0)
@@ -816,14 +847,14 @@ VERIFICAR_ENTRADA:
         sw t2, 8(sp)
         sw t3, 12(sp)
 
-        # Checa Canto Sup Dir
+        # Checa Canto Superior Direito
         mv a0, t1
         addi a0, a0, 14
         mv a1, t2
         call CHECK_MAP_COLLISION
         mv t5, a0
 
-        # Checa Canto Inf Dir
+        # Checa Canto Inferior Direito
         lw t1, 4(sp)
         mv a0, t1
         addi a0, a0, 14
@@ -836,7 +867,6 @@ VERIFICAR_ENTRADA:
         call CHECK_MAP_COLLISION
         lw t5, 0(sp)
         addi sp, sp, 4
-
         or t5, t5, a0
 
         lw t3, 12(sp)
@@ -846,13 +876,58 @@ VERIFICAR_ENTRADA:
         addi sp, sp, 16
 
         bnez t5, RETORNAR_ENTRADA
+        
         sh t1, 0(t0)
-        j RETORNAR_ENTRADA
+        li t6, 1          # <--- MARCA QUE ANDOU!
+        j PROCESSAR_ANIMACAO
     
+    # -----------------------------------------------------
+    # LÓGICA DE ANIMAÇÃO
+    # -----------------------------------------------------
+    PROCESSAR_ANIMACAO:
+        beqz t6, RETORNAR_ENTRADA  # Se t6 for 0 (parado), não anima
+        call ATUALIZAR_FRAME       # Se t6 for 1 (andou), troca o frame
+
     RETORNAR_ENTRADA:
-    # 2. Restaurar RA da pilha antes de sair
-    lw ra, 0(sp)
-    addi sp, sp, 4
+        lw ra, 0(sp)
+        addi sp, sp, 4
+        ret
+
+# ==========================================
+# FUNÇÃO DE ANIMAÇÃO (CORRIGIDA)
+# ==========================================
+ATUALIZAR_FRAME:
+    # 1. Verifica Timer (Velocidade da Animação)
+    la t0, SAMARA_ANIM_CONT
+    lw t1, 0(t0)
+    addi t1, t1, 1
+    li t2, 2                  # <--- VELOCIDADE: Aumente se estiver muito rápido
+    sw t1, 0(t0)
+    blt t1, t2, RET_ANIM      
+    
+    sw zero, 0(t0)            # Reseta timer
+
+    # 2. Carrega Endereço do Frame Atual
+    la t0, SAMARA_FRAME_ANIMACAO
+    lw t1, 0(t0)              
+
+    # 3. Avança o Ponteiro (CORREÇÃO DE TAMANHO)
+    # Pula 264 bytes (16x16 pixels + Header)
+    addi t1, t1, 264          
+
+    # 4. Verifica Limite (Loop)
+    la t2, char               
+    addi t2, t2, 1056         # Limite = 264 bytes * 4 frames
+    
+    blt t1, t2, SAVE_FRAME    
+    
+    # Se passou do limite, volta para o começo (Frame 0)
+    la t1, char
+
+    SAVE_FRAME:
+    sw t1, 0(t0)              
+    
+    RET_ANIM:
     ret
 
 # ATUALIZAÇÃO DE INIMIGOS (INDEPENDENTE)
@@ -1246,6 +1321,40 @@ MOVER_BISPO:
     lw ra, 0(sp)
     addi sp, sp, 4
     ret
+# ==========================================
+ATUALIZAR_FRAME:
+    # 1. Verifica Timer (Delay de Animação)
+    la t0, SAMARA_ANIM_CONT
+    lw t1, 0(t0)
+    addi t1, t1, 1
+    li t2, 2                  
+    sw t1, 0(t0)
+    blt t1, t2, RET_ANIM      
+    
+    sw zero, 0(t0)            # Reseta timer
+
+    # 2. Carrega Endereço Atual
+    la t0, SAMARA_FRAME_ANIMACAO
+    lw t1, 0(t0)              
+
+    # 3. Avança o Ponteiro (CORREÇÃO AQUI)
+    # Tamanho real = 256 (pixels) + 8 (header) = 264 bytes
+    addi t1, t1, 264          # <--- MUDADO DE 1032 PARA 264
+
+    # 4. Verifica Limite (Loop)
+    la t2, char               
+    addi t2, t2, 1056         # <--- MUDADO DE 4128 PARA 1056 (264 * 4 frames)
+    
+    blt t1, t2, SAVE_FRAME    
+    
+    # Se passou do limite, volta para o começo
+    la t1, char
+
+    SAVE_FRAME:
+    sw t1, 0(t0)              
+    
+    RET_ANIM:
+    ret
 #########################################################
 # IMPRIMIR
 # Função genérica pra pintar sprite na tela
@@ -1278,6 +1387,7 @@ LOOP_IMPRIMIR:
     ret
 
 # INCLUDES
+.include "music_ef.asm"
 .include "sprites/tile.s"
 .include "sprites/map.s"
 .include "sprites/char.s"
