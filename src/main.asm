@@ -100,6 +100,7 @@ CAVALO_Y:      .word 4
 DAMA_POS: .half 160, 100   # Começa no meio
 DAMA_VEL: .word 3, 3       # Velocidade X e Y (Rápida!)
 POS_OCULTA: .half 400, 400
+DAMA_VIDA: .word 12   # Começa com 12 de vida
 
 # ============ MAPA DE COLISÃO && MAPA ATUAL ============
 # 0 = chão, 1 = parede
@@ -148,11 +149,17 @@ M2_CAVALO_POS:  .half 160, 120    # Meio da tela
 # CONFIGURACAO_INICIAL (SETUP)
 #########################################################
 CONFIGURACAO_INICIAL:
-    # --- Reseta as Vidas pra 3 ---
+    # --- Reseta as Vidas pra 3 samara ---
     la t0, VIDAS
     li t1, 3
     sw t1, 0(t0)
     
+    #Dama
+    # --- RESET VIDA DO BOSS ---
+    la t0, DAMA_VIDA
+    li t1, 12
+    sw t1, 0(t0)
+
     # --- Reseta a Velocidade pro padrão ---
     la t0, VELO_SAMARA
     li t1, 4
@@ -713,13 +720,33 @@ PROCESSAR_ATAQUE:
         j PROXIMO_TIRO
 
         # -- TRATAMENTO DE ACERTO --
+        # -- TRATAMENTO DE ACERTO INIMIGO 1 --
         ACERTOU_INIMIGO_1:
-            lw t0, 4(sp)
+            lw t0, 4(sp)        # Restaura registradores da pilha (que salvamos antes do jump)
             addi sp, sp, 8
+            
+            # --- VERIFICA SE É BOSS (MAPA 2) ---
+            la t4, MAPA_ATUAL
+            lw t4, 0(t4)
+            la t5, map_2
+            bne t4, t5, MORTE_INSTANTANEA # Se não for map_2, mata direto
+            
+            # --- LÓGICA DE VIDA DO BOSS ---
+            la t4, DAMA_VIDA
+            lw t5, 0(t4)
+            addi t5, t5, -1     # Tira 1 de vida
+            sw t5, 0(t4)
+            
+            blez t5, MORTE_INSTANTANEA # Se Vida <= 0, mata de vez
+            
+            # Se ainda tem vida, só consome o tiro e sai
+            j MATAR_TIRO 
+
+            MORTE_INSTANTANEA:
             la t2, PTR_INIMIGO_1
             lw t2, 0(t2)
-            li t3, 400
-            sh t3, 0(t2)    # Teleporta inimigo
+            li t3, 400          # Manda pro "cemitério"
+            sh t3, 0(t2)
             sh t3, 2(t2)
             j MATAR_TIRO
 
@@ -1850,107 +1877,377 @@ MOVER_BISPO:
     addi sp, sp, 4
     ret
 # ==========================================
-# MOVER DAMA (BOSS)
+# MOVER DAMA (COM DESEMPERRADOR AUTOMÁTICO)
 # ==========================================
+MOVER_DAMA:
 MOVER_DAMA:
     addi sp, sp, -4
     sw ra, 0(sp)
 
-    # Carrega dados
-    la a0, DAMA_POS
-    la a1, DAMA_VEL     # Pointer da velocidade
-    lh t0, 0(a0)        # X Atual
-    lh t1, 2(a0)        # Y Atual
-    lw t2, 0(a1)        # Vel X
-    lw t3, 4(a1)        # Vel Y (Note o offset 4, pois é .word 3, 3)
+    la t0, DAMA_POS
+    lh t1, 0(t0)        # t1 = Dama X
+    lh t2, 2(t0)        # t2 = Dama Y
 
-    # --- MOVIMENTO X ---
-    add t4, t0, t2      # X Futuro
+    # --- VERIFICA SE ESTÁ MORTA ---
+    li t3, 350
+    bge t1, t3, FIM_MOVER_DAMA  # Se X >= 350, ela tá morta. Não faz nada.
+
+    # --- 1. CERCA DE SEGURANÇA (ANTI-STUCK) ---
+    # Se ela estiver na parede (X < 16 ou Y < 16), empurra pra dentro da arena
+    li t3, 16           
     
-    # Check Colisão X
-    addi sp, sp, -20
+    # Checa Esquerda/Topo
+    blt t1, t3, FORCAR_POSICAO
+    blt t2, t3, FORCAR_POSICAO
+    
+    # Checa Direita/Baixo (Limites da tela - margem)
+    li t3, 290
+    bgt t1, t3, FORCAR_POSICAO
+    li t3, 210
+    bgt t2, t3, FORCAR_POSICAO
+    
+    j INICIO_MOVIMENTO
+
+    FORCAR_POSICAO:
+    # Se caiu aqui, ela está bugada na parede. 
+    # Força ela para uma posição segura próxima (16, 16) ou apenas ajusta a borda.
+    # Vamos usar um "clamp" simples: se < 16, vira 16.
+    
+    li t3, 16
+    bge t1, t3, CHECK_MAX_X
+    mv t1, t3           # X = 16
+    sh t1, 0(t0)
+    CHECK_MAX_X:
+    li t3, 290
+    ble t1, t3, CHECK_MIN_Y
+    mv t1, t3           # X = 290
+    sh t1, 0(t0)
+    
+    CHECK_MIN_Y:
+    li t3, 16
+    bge t2, t3, CHECK_MAX_Y
+    mv t2, t3           # Y = 16 (Sai de cima das chaves/HUD)
+    sh t2, 2(t0)
+    CHECK_MAX_Y:
+    li t3, 210
+    ble t2, t3, INICIO_MOVIMENTO
+    mv t2, t3           # Y = 210
+    sh t2, 2(t0)
+
+    # --- 2. LÓGICA DE PERSEGUIÇÃO ---
+    INICIO_MOVIMENTO:
+    la t3, SAMARA_POS
+    lh t4, 0(t3)        # Samara X
+    lh t5, 2(t3)        # Samara Y
+    li s1, 2            # Velocidade
+
+    # --- EIXO X ---
+    beq t1, t4, CHECK_Y_DAMA
+    blt t1, t4, DAMA_DIR       
+    
+    # Esquerda
+    sub t6, t1, s1      # X Futuro
+    mv a0, t6           
+    j TESTAR_COLISAO_X
+    
+    DAMA_DIR:
+    # Direita
+    add t6, t1, s1      
+    addi a0, t6, 14     
+
+    TESTAR_COLISAO_X:
+    addi sp, sp, -24
     sw t0, 0(sp)
     sw t1, 4(sp)
     sw t2, 8(sp)
-    sw t3, 12(sp)
-    sw t4, 16(sp)
+    sw t4, 12(sp) # Salva Samara X só pra garantir alinhamento
+    sw t5, 16(sp) # Salva Samara Y
+    sw t6, 20(sp) 
+    sw a0, 12(sp) # Reusa slot 12 pra salvar X teste
 
-    mv a0, t4           # Testa X Futuro
-    la t6, DAMA_POS     
-    lh a1, 2(t6)        # Y Atual
-    addi a1, a1, 8      
+    mv a1, t2    
+    addi a1, a1, 4    # Y + 4 (Margem segura)
     call CHECAR_COLISAO_MAPA
-    mv t5, a0 
+    mv t3, a0
 
-    lw t4, 16(sp)
-    lw t3, 12(sp)
+    lw a0, 12(sp)
+    mv a1, t2
+    addi a1, a1, 10   # Y + 10 (Margem segura)
+    
+    addi sp, sp, -4
+    sw t3, 0(sp)
+    call CHECAR_COLISAO_MAPA
+    lw t3, 0(sp)
+    addi sp, sp, 4
+    
+    or t3, t3, a0 
+
+    lw t6, 20(sp)
+    lw t5, 16(sp)
     lw t2, 8(sp)
     lw t1, 4(sp)
     lw t0, 0(sp)
-    addi sp, sp, 20
+    addi sp, sp, 24
 
-    # Se bateu X, inverte
-    bnez t5, INV_DAMA_X
-    li t6, 296
-    bge t4, t6, INV_DAMA_X
-    li t6, 8
-    blt t4, t6, INV_DAMA_X
-    
-    mv t0, t4           # Aceita X
-    j DAMA_Y
+    bnez t3, CHECK_Y_DAMA
+    sh t6, 0(t0)        
+    mv t1, t6           
 
-    INV_DAMA_X:
-    sub t2, zero, t2    # Inverte Vel X
-    la t6, DAMA_VEL
-    sw t2, 0(t6)
+    # --- EIXO Y ---
+    CHECK_Y_DAMA:
+    # Recarrega Samara Y garantido
+    la t3, SAMARA_POS
+    lh t5, 2(t3)
 
-    DAMA_Y:
-    # --- MOVIMENTO Y ---
-    add t4, t1, t3      # Y Futuro
+    beq t2, t5, FIM_MOVER_DAMA
+    blt t2, t5, DAMA_BAIXO
 
-    addi sp, sp, -20
-    sw t0, 0(sp)
-    sw t1, 4(sp)
-    sw t2, 8(sp)
-    sw t3, 12(sp)
-    sw t4, 16(sp)
+    # Cima
+    sub t6, t2, s1             
+    mv a1, t6
+    j TESTAR_COLISAO_Y
 
-    mv a1, t4           # Testa Y Futuro
-    mv a0, t0           # X já atualizado
-    addi a0, a0, 8
+    DAMA_BAIXO:
+    # Baixo
+    add t6, t2, s1             
+    addi a1, t6, 14
+
+    TESTAR_COLISAO_Y:
+    addi sp, sp, -12
+    sw t6, 0(sp)
+    sw a1, 4(sp)
+    sw t0, 8(sp)
+
+    mv a0, t1    
+    addi a0, a0, 4     # X + 4
     call CHECAR_COLISAO_MAPA
-    mv t5, a0
+    mv t3, a0
 
-    lw t4, 16(sp)
-    lw t3, 12(sp)
-    lw t2, 8(sp)
-    lw t1, 4(sp)
-    lw t0, 0(sp)
-    addi sp, sp, 20
-
-    # Se bateu Y, inverte
-    bnez t5, INV_DAMA_Y
-    li t6, 216
-    bge t4, t6, INV_DAMA_Y
-    li t6, 8
-    blt t4, t6, INV_DAMA_Y
+    lw a1, 4(sp)
+    mv a0, t1
+    addi a0, a0, 10    # X + 10
     
-    mv t1, t4           # Aceita Y
-    j FIM_DAMA
+    addi sp, sp, -4
+    sw t3, 0(sp)
+    call CHECAR_COLISAO_MAPA
+    lw t3, 0(sp)
+    addi sp, sp, 4
 
-    INV_DAMA_Y:
-    sub t3, zero, t3    # Inverte Vel Y
-    la t6, DAMA_VEL
-    sw t3, 4(t6)
+    or t3, t3, a0 
 
-    FIM_DAMA:
-    la a0, DAMA_POS
-    sh t0, 0(a0)
-    sh t1, 2(a0)
+    lw t0, 8(sp)
+    lw t6, 0(sp)
+    addi sp, sp, 12
 
+    bnez t3, FIM_MOVER_DAMA
+    sh t6, 2(t0)
+
+    FIM_MOVER_DAMA:
     lw ra, 0(sp)
     addi sp, sp, 4
     ret
+
+##########################----------------> Move do caneiro (Segunda fase algo futuro)
+# ==========================================
+# MOVER DAMA (FUGA COM TELEPORTE DE EMERGÊNCIA)
+# ==========================================
+# MOVER_DAMA:
+#     addi sp, sp, -4
+#     sw ra, 0(sp)
+
+#     la t0, DAMA_POS
+#     lh t1, 0(t0)        # t1 = Dama X
+#     lh t2, 2(t0)        # t2 = Dama Y
+
+#     # --- 0. VERIFICA SE ESTÁ MORTA ---
+#     li t3, 350
+#     bge t1, t3, FIM_MOVER_DAMA
+
+#     # --- 1. LÓGICA DE TELEPORTE (ESCAPE) ---
+#     # Só checa se o player estiver PERTO (Distância < 60 pixels)
+#     la t3, SAMARA_POS
+#     lh t4, 0(t3)        # Samara X
+#     lh t5, 2(t3)        # Samara Y
+
+#     # Calcula Distância X (Absoluta)
+#     sub t6, t1, t4      # dx = Dama - Samara
+#     bgez t6, ABS_X
+#     sub t6, zero, t6    # Inverte sinal se negativo
+#     ABS_X:
+
+#     # Calcula Distância Y (Absoluta)
+#     sub a7, t2, t5      # dy = Dama - Samara
+#     bgez a7, ABS_Y
+#     sub a7, zero, a7
+#     ABS_Y:
+
+#     # Soma distâncias (Manhattan Distance)
+#     add t6, t6, a7      # Distância Total
+#     li a7, 60           # Distância de Ativação (se chegar a 60px, ela fica alerta)
+#     bgt t6, a7, PULA_TELEPORTE # Se longe, não teleporta
+
+#     # Se está PERTO, verifica se está ENCURRALADA (perto das bordas)
+#     li t6, 30
+#     blt t1, t6, EXECUTAR_TELEPORTE # Canto Esq
+#     li t6, 290
+#     bgt t1, t6, EXECUTAR_TELEPORTE # Canto Dir
+#     li t6, 30
+#     blt t2, t6, EXECUTAR_TELEPORTE # Canto Cima
+#     li t6, 210
+#     bgt t2, t6, EXECUTAR_TELEPORTE # Canto Baixo
+    
+#     j PULA_TELEPORTE
+
+#     EXECUTAR_TELEPORTE:
+#     # Teleporta para o MEIO da tela para fugir
+#     li t6, 160
+#     sh t6, 0(t0)        # X = 160
+#     li t6, 120
+#     sh t6, 2(t0)        # Y = 120
+    
+#     # Opcional: Tocar som aqui futuramente
+#     j FIM_MOVER_DAMA    # Sai da função neste frame (efeito visual de sumir)
+
+#     PULA_TELEPORTE:
+
+#     # --- 2. CERCA DE SEGURANÇA (MANTÉM ELA NA ARENA) ---
+#     li t3, 16           
+#     blt t1, t3, FORCAR_POSICAO
+#     blt t2, t3, FORCAR_POSICAO
+#     li t3, 290
+#     bgt t1, t3, FORCAR_POSICAO
+#     li t3, 210
+#     bgt t2, t3, FORCAR_POSICAO
+#     j INICIO_MOVIMENTO
+
+#     FORCAR_POSICAO:
+#     li t3, 16
+#     bge t1, t3, CHECK_MAX_X
+#     mv t1, t3
+#     sh t1, 0(t0)
+#     CHECK_MAX_X:
+#     li t3, 290
+#     ble t1, t3, CHECK_MIN_Y
+#     mv t1, t3
+#     sh t1, 0(t0)
+#     CHECK_MIN_Y:
+#     li t3, 16
+#     bge t2, t3, CHECK_MAX_Y
+#     mv t2, t3
+#     sh t2, 2(t0)
+#     CHECK_MAX_Y:
+#     li t3, 210
+#     ble t2, t3, INICIO_MOVIMENTO
+#     mv t2, t3
+#     sh t2, 2(t0)
+
+#     # --- 3. LÓGICA DE FUGA (IGUAL À ANTERIOR) ---
+#     INICIO_MOVIMENTO:
+#     # t4 e t5 já foram carregados lá em cima com SAMARA_POS
+#     li s1, 2            # Velocidade
+
+#     # EIXO X
+#     beq t1, t4, CHECK_Y_DAMA
+#     blt t1, t4, FUGIR_ESQUERDA
+    
+#     # Fugir p/ Direita
+#     add t6, t1, s1      
+#     addi a0, t6, 14     
+#     j TESTAR_COLISAO_X
+    
+#     FUGIR_ESQUERDA:
+#     sub t6, t1, s1      
+#     mv a0, t6           
+
+#     TESTAR_COLISAO_X:
+#     addi sp, sp, -24
+#     sw t0, 0(sp)
+#     sw t1, 4(sp)
+#     sw t2, 8(sp)
+#     sw t4, 12(sp) 
+#     sw t5, 16(sp) 
+#     sw t6, 20(sp) 
+#     sw a0, 12(sp)
+
+#     mv a1, t2    
+#     addi a1, a1, 4    
+#     call CHECAR_COLISAO_MAPA
+#     mv t3, a0
+
+#     lw a0, 12(sp)
+#     mv a1, t2
+#     addi a1, a1, 10   
+    
+#     addi sp, sp, -4
+#     sw t3, 0(sp)
+#     call CHECAR_COLISAO_MAPA
+#     lw t3, 0(sp)
+#     addi sp, sp, 4
+    
+#     or t3, t3, a0 
+
+#     lw t6, 20(sp)
+#     lw t5, 16(sp)
+#     lw t2, 8(sp)
+#     lw t1, 4(sp)
+#     lw t0, 0(sp)
+#     addi sp, sp, 24
+
+#     bnez t3, CHECK_Y_DAMA
+#     sh t6, 0(t0)        
+#     mv t1, t6           
+
+#     # EIXO Y
+#     CHECK_Y_DAMA:
+#     la t3, SAMARA_POS   # Recarrega segurança
+#     lh t5, 2(t3)
+
+#     beq t2, t5, FIM_MOVER_DAMA
+#     blt t2, t5, FUGIR_CIMA
+
+#     # Fugir p/ Baixo
+#     add t6, t2, s1             
+#     addi a1, t6, 14
+#     j TESTAR_COLISAO_Y
+
+#     FUGIR_CIMA:
+#     sub t6, t2, s1             
+#     mv a1, t6
+
+#     TESTAR_COLISAO_Y:
+#     addi sp, sp, -12
+#     sw t6, 0(sp)
+#     sw a1, 4(sp)
+#     sw t0, 8(sp)
+
+#     mv a0, t1    
+#     addi a0, a0, 4     
+#     call CHECAR_COLISAO_MAPA
+#     mv t3, a0
+
+#     lw a1, 4(sp)
+#     mv a0, t1
+#     addi a0, a0, 10    
+    
+#     addi sp, sp, -4
+#     sw t3, 0(sp)
+#     call CHECAR_COLISAO_MAPA
+#     lw t3, 0(sp)
+#     addi sp, sp, 4
+
+#     or t3, t3, a0 
+
+#     lw t0, 8(sp)
+#     lw t6, 0(sp)
+#     addi sp, sp, 12
+
+#     bnez t3, FIM_MOVER_DAMA
+#     sh t6, 2(t0)
+
+#     FIM_MOVER_DAMA:
+#     lw ra, 0(sp)
+#     addi sp, sp, 4
+#     ret
 # ==========================================
 ATUALIZAR_FRAME:
     # 1. Verifica Timer (Delay de Animação)
