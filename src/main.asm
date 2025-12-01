@@ -15,6 +15,7 @@ INVULNERAVEL:          .word 0  # Contador de invencibilidade (tempo piscando)
 VELO_SAMARA:           .word 4  # Velocidade da boneca (pixels por frame)
 SAMARA_FRAME_ANIMACAO: .word char  # Guarda o endereço de memória atual do sprite (começa no início de 'char')
 SAMARA_ANIM_CONT:      .word 0  # Contador para não trocar frame rápido demais
+PASSO_TIMER: .word 0 ##isso é pro efeito sonoro apenas 
 
 # Timer para inimigos (Independente)
 TEMP_RIVAL:  .word 0            # Cronômetro interno dos bichos
@@ -230,13 +231,11 @@ LOOP_DO_JOGO:
     
     # Checa se bateu em parede, item ou bicho
     call VERIFICAR_COLISOES
-    
-    
 
     # Se vidas <= 0, já era
     la t0, VIDAS
     lw t0, 0(t0)
-    blez t0, FIM_DE_JOGO_TELA
+    blez t0, INICIO_MORTE_GAUNTLET
 
     # --- 3. RENDERIZAÇÃO ---
     # Desenha bonecos e baús
@@ -265,6 +264,18 @@ LOOP_DO_JOGO:
 #########################################################
 # TELA DE GAME OVER
 #########################################################
+INICIO_MORTE_GAUNTLET:
+    # --- 1. PREPARAÇÃO ---
+    # Toca som de morte
+    li a0, 60
+    call SOM_EFEITO_FALHA
+    
+    # Chama a nova câmera cinematográfica
+    call ANIMACAO_CINEMATICA
+    
+    # Vai para Game Over UI
+    j FIM_DE_JOGO_TELA
+
 FIM_DE_JOGO_TELA:
     # Desenha a tela de derrota nos dois frames pra garantir
     li s0, 0
@@ -376,7 +387,175 @@ DESENHAR_TUDO:
     lw ra, 0(sp)
     addi sp, sp, 4
     ret
+#########################################################
+# NOVA FUNÇÃO: ANIMACAO_CINEMATICA
+# Efeito: Câmera viaja do centro da tela até o player,
+# fechando o foco (Iris Wipe) com interpolação suave.
+#########################################################
+ANIMACAO_CINEMATICA:
+    addi sp, sp, -36
+    sw ra, 0(sp)
+    sw s0, 4(sp)
+    sw s1, 8(sp) # Camera X Atual
+    sw s2, 12(sp) # Camera Y Atual
+    sw s3, 16(sp) # Raio Atual
+    sw s4, 20(sp) # Target X
+    sw s5, 24(sp) # Target Y
+    sw s6, 28(sp) # Frame Visível (Base)
+    sw s7, 32(sp) # Frame Backup (Snapshot)
 
+    # --- 1. SETUP DE BUFFERS ---
+    # Descobre qual frame está na tela agora
+    li t0, 0xFF200604       
+    lw t1, 0(t0)            # 0 ou 1
+    
+    # Define endereços base
+    li s6, 0xFF000000       # Frame 0
+    li s7, 0xFF100000       # Frame 1
+    beqz t1, SETUP_SNAPSHOT
+    
+    # Se t1 for 1, inverte: s6 é Frame 1 (Visível), s7 é Frame 0 (Backup)
+    li s6, 0xFF100000
+    li s7, 0xFF000000
+
+    SETUP_SNAPSHOT:
+    # --- 2. TIRAR SNAPSHOT (BACKUP DO JOGO) ---
+    # Copia o frame visível (s6) para o backup (s7)
+    # Isso permite restaurar o fundo enquanto o círculo se move
+    mv t0, s6
+    mv t1, s7
+    li t2, 76800            # Total de pixels (320x240)
+    
+    LOOP_SNAPSHOT:
+        lw t3, 0(t0)
+        sw t3, 0(t1)
+        addi t0, t0, 4
+        addi t1, t1, 4
+        addi t2, t2, -1
+        bnez t2, LOOP_SNAPSHOT
+
+    # --- 3. CONFIGURAR VARIÁVEIS DE ANIMAÇÃO ---
+    # Posição Inicial da Câmera (Centro da Tela)
+    li s1, 160              # Cam X Start
+    li s2, 120              # Cam Y Start
+    li s3, 220              # Raio Inicial (Tela cheia)
+
+    # Posição Alvo (Onde o Player morreu)
+    la t0, SAMARA_POS
+    lh s4, 0(t0)            # Player X
+    lh s5, 2(t0)            # Player Y
+    addi s4, s4, 8          # Centraliza no sprite (+8)
+    addi s5, s5, 8          # Centraliza no sprite (+8)
+
+    # --- 4. LOOP DE ANIMAÇÃO ---
+    LOOP_CINE:
+        # A) RESTAURAR FUNDO (Copia Backup -> Visível)
+        # Necessário pois o círculo se move e precisamos apagar o preto antigo
+        mv t0, s7           # Origem (Backup)
+        mv t1, s6           # Destino (Tela)
+        li t2, 76800        # Pixels
+        
+        # Otimização: Copia em blocos ou loop simples
+        LOOP_RESTORE:
+            lw t3, 0(t0)
+            sw t3, 0(t1)
+            addi t0, t0, 4
+            addi t1, t1, 4
+            addi t2, t2, -1
+            bnez t2, LOOP_RESTORE
+
+        # B) ATUALIZAR FÍSICA (INTERPOLAÇÃO)
+        # Aproximação assintótica (Ease-Out):
+        # Novo = Atual + (Alvo - Atual) / Velocidade
+        
+        # Move X
+        sub t0, s4, s1      # Distância X
+        srai t0, t0, 3      # Divide por 8 (Suavidade)
+        add s1, s1, t0      # Atualiza X
+        
+        # Move Y
+        sub t0, s5, s2      # Distância Y
+        srai t0, t0, 3      # Divide por 8
+        add s2, s2, t0      # Atualiza Y
+        
+        # Move Raio (Alvo = 25 pixels)
+        li t1, 25
+        sub t0, s3, t1      # Diferença Raio
+        srai t0, t0, 4      # Divide por 16 (Fecha mais devagar que move)
+        
+        # Garante que sempre diminui pelo menos 1 se ainda estiver longe
+        bnez t0, APLICA_RAIO
+        li t0, 1            # Velocidade mínima
+        APLICA_RAIO:
+        sub s3, s3, t0      # Diminui Raio
+        
+        # C) DESENHAR MÁSCARA PRETA (VIGNETTE)
+        # Pinta preto tudo que estiver FORA do círculo (s1, s2, raio s3)
+        mul s0, s3, s3      # Raio^2 (s0 temporário)
+        
+        li t1, 0            # Y = 0
+        LOOP_Y_CINE:
+            li t2, 240
+            bge t1, t2, FIM_DRAW_CINE
+            
+            # Pré-calcula (dy^2)
+            sub t4, t1, s2      # dy = Y - CamY
+            mul t4, t4, t4      # dy^2
+            
+            # Endereço da linha
+            li t5, 320
+            mul t6, t1, t5      # Y * 320
+            slli t6, t6, 2      # bytes
+            add t6, t6, s6      # + Base Address
+
+            li t3, 0            # X = 0
+            LOOP_X_CINE:
+                bge t3, t5, NEXT_LINE_CINE
+                
+                # Calcula Distância^2
+                sub t2, t3, s1  # dx = X - CamX
+                mul t2, t2, t2  # dx^2
+                add t2, t2, t4  # Dist = dx^2 + dy^2
+                
+                # Se Dist > Raio^2, pinta PRETO
+                ble t2, s0, SKIP_PIXEL_CINE
+                sw zero, 0(t6)
+                
+                SKIP_PIXEL_CINE:
+                addi t6, t6, 4
+                addi t3, t3, 1
+                j LOOP_X_CINE
+
+            NEXT_LINE_CINE:
+            addi t1, t1, 1
+            j LOOP_Y_CINE
+
+        FIM_DRAW_CINE:
+        
+        # D) CONTROLE DE TEMPO E SAÍDA
+        li a7, 32
+        li a0, 30           # Delay 30ms (aprox 30 FPS na animação)
+        ecall
+        
+        # Verifica se o raio chegou perto do alvo (25)
+        li t0, 28
+        blt s3, t0, FIM_ANIMACAO_CINE
+        
+        j LOOP_CINE
+
+    FIM_ANIMACAO_CINE:
+    # Restaura pilha
+    lw s7, 32(sp)
+    lw s6, 28(sp)
+    lw s5, 24(sp)
+    lw s4, 20(sp)
+    lw s3, 16(sp)
+    lw s2, 12(sp)
+    lw s1, 8(sp)
+    lw s0, 4(sp)
+    lw ra, 0(sp)
+    addi sp, sp, 36
+    ret
 # =========================================================
 # DESENHAR TODOS OS TIROS ATIVOS
 # =========================================================
@@ -928,6 +1107,7 @@ VERIFICAR_COLISOES:
     j FIM_COLISOES
 
     RECEBEU_DANO:
+    call SOM_DANO
     la t0, VIDAS
     lw t1, 0(t0)
     addi t1, t1, -1       # Perde vida
@@ -1393,14 +1573,21 @@ TENTAR_ATACAR:
     # LÓGICA DE ANIMAÇÃO
     # -----------------------------------------------------
     PROCESSAR_ANIMACAO:
-        beqz t6, RETORNAR_ENTRADA  # Se t6 for 0 (parado), não anima
-        call ATUALIZAR_FRAME       # Se t6 for 1 (andou), troca o frame
-
+        beqz t6, RESETAR_TIMER_PASSO  # Se t6 for 0 (parado), não anima
+        # --- Se chegou aqui, ele está andando (t6=1) ---
+        call ATUALIZAR_FRAME       # Sua função de animação visual
+        call TOCAR_SOM_PASSO    # Se t6 for 1 (andou), troca o frame
+        
     RETORNAR_ENTRADA:
         lw ra, 0(sp)
         addi sp, sp, 4
         ret
-
+    RESETAR_TIMER_PASSO:
+        # Faz o próximo passo sair instantâneo quando começar a andar de novo
+        la t0, PASSO_TIMER
+        li t1, 19          # Deixa quase pronto pra tocar
+        sw t1, 0(t0)
+        j RETORNAR_ENTRADA
 # ==========================================
 # FUNÇÃO DE ANIMAÇÃO (CORRIGIDA)
 # ==========================================
@@ -1491,7 +1678,6 @@ ATUALIZAR_INIMIGOS:
     
     EXECUTAR_MOVIMENTO:
     sw zero, 0(t0) 
-    
     # --- VERIFICA QUAL MAPA ESTÁ ---
     la t0, MAPA_ATUAL
     lw t0, 0(t0)
