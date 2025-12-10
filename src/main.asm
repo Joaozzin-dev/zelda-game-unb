@@ -21,7 +21,6 @@ TEMPO_DE_EXECUCAO:     .word 0  # Guarda o tempo do último frame
 VIDAS:                 .word 3  # Começa com 3 vidas
 INVULNERAVEL:          .word 0  # Contador de invencibilidade (tempo piscando)
 VELO_SAMARA:           .word 4  # Velocidade da boneca (pixels por frame)
-SAMARA_FRAME_ANIMACAO: .word char  # Guarda o endereço de memória atual do sprite (começa no início de 'char')
 SAMARA_ANIM_CONT:      .word 0  # Contador para não trocar frame rápido demais
 PASSO_TIMER: .word 0 ##isso é pro efeito sonoro apenas 
 
@@ -148,31 +147,52 @@ SHEEP_ARRAY:      .space 240 # Espaço para 15 carneiros (Struct de 16 bytes cad
 # 4: Y (word)
 # 8: Ativo (word) - 0=Não, 1=Sim
 # 12: SlowTimer (word) - Se > 0, ele está lento
+# ============ CONTROLE DE ANIMAÇÃO AVANÇADO ============
+SAMARA_FRAME_ANIMACAO: .word SEQ_S    # Ponteiro para o frame atual (o que é desenhado)
+ANIM_TIMER:            .word 0        # Timer para controlar velocidade da troca
+ANIM_DELAY_LIMIT:      .word 8        # Quanto maior, mais lenta a animação (Flicker control)
+ANIM_INDEX_ATUAL:      .word 0        # Qual frame da sequência estamos (0, 1, 2...)
+ANIM_SEQ_ATUAL:        .word 0        # Guarda o endereço base da sequência atual (para resetar se mudar de tecla)
 
-# ==========================================
-# SPRITE CARNEIRO (FIXO NO CÓDIGO - CORREÇÃO DE CRASH)
-# ==========================================
-.align 2
-sheep_sprite:
-    .word 16, 16   # Largura, Altura OBRIGATÓRIAS
 
-    # Dados da Imagem (16x16 pixels)
-    .byte 199,199,199,199,199,199,199,199,199,199,199,199,199,199,199,199
-    .byte 199,199,199,199,199,199,199,255,255,255,199,199,199,199,199,199
-    .byte 199,199,199,199,199,255,255,255,255,255,255,199,199,199,199,199
-    .byte 199,199,199,255,255,255,255,255,255,255,255,255,199,199,199,199
-    .byte 199,199,255,255,255,255,255,255,255,255,255,255,255,199,199,199
-    .byte 199,199,255,255,255,255,255,255,255,255,255,255,  0,  0,199,199
-    .byte 199,255,255,255,255,255,255,255,255,255,255,  0,  0,255,  0,199
-    .byte 199,255,255,255,255,255,255,255,255,255,255,  0,  0,  0,  0,199
-    .byte 199,255,255,255,255,255,255,255,255,255,255,  0,  0,  0,  0,199
-    .byte 199,255,255,255,255,255,255,255,255,255,255,255,  0,  0,199,199
-    .byte 199,199,200,200,200,255,255,255,255,255,200,200,200,199,199,199
-    .byte 199,199,199,200,200,200,200,200,200,200,200,199,199,199,199,199
-    .byte 199,199,199,199,  0,  0,199,199,199,  0,  0,199,199,199,199,199
-    .byte 199,199,199,199,  0,  0,199,199,199,  0,  0,199,199,199,199,199
-    .byte 199,199,199,199,  0,  0,199,199,199,  0,  0,199,199,199,199,199
-    .byte 199,199,199,199,199,199,199,199,199,199,199,199,199,199,199,199
+# ============ CONTROLE DE ANIMAÇÃO DO CARNEIRO ============
+SHEEP_FRAME_PTR:   .word sheep_anim_seq   # Aponta para o frame atual
+SHEEP_ANIM_TIMER:  .word 0                # Controla a velocidade da troca
+# ============ SPRITES DA SAMARA (DATA GIGANTE) ============
+# AQUI FICA TUDO EM SEQUÊNCIA. O código vai navegar somando endereços.
+
+# --- SEQUÊNCIA W (ANDAR CIMA - 3 FRAMES) ---
+SEQ_W:
+    .include "sprites/samara_w1.data"  # Frame 0
+    .include "sprites/samara_w2.data"  # Frame 1
+    .include "sprites/samara_w3.data"  # Frame 2
+SEQ_W_END:
+
+# --- SEQUÊNCIA S (ANDAR BAIXO - 3 FRAMES) ---
+SEQ_S:
+    .include "sprites/samara_s1.data"
+    .include "sprites/samara_s2.data"
+    .include "sprites/samara_s3.data"
+SEQ_S_END:
+
+# --- SEQUÊNCIA A (ANDAR ESQUERDA - 2 FRAMES) ---
+SEQ_A:
+    .include "sprites/samara_a1.data"
+    .include "sprites/samara_a2.data"
+SEQ_A_END:
+
+# --- SEQUÊNCIA D (ANDAR DIREITA - 2 FRAMES) ---
+SEQ_D:
+    .include "sprites/samara_d1.data"
+    .include "sprites/samara_d2.data"
+SEQ_D_END:
+
+# --- SEQUÊNCIA ESPAÇO (ATAQUE - 3 FRAMES) ---
+SEQ_ATK:
+    .include "sprites/samara_atk1.data"
+    # .include "sprites/samara_atk2.data"
+    # .include "sprites/samara_atk3.data"
+SEQ_ATK_END:
 
 # Sprite da loja (Overlay)
 shop_sprite: 
@@ -477,7 +497,54 @@ LOOP_DO_JOGO:
     # Limpa a tela pro próximo round e repete
     call LIMPAR_TELA_TOTAL
     j LOOP_DO_JOGO
+# =========================================================
+# ATUALIZAR_ANIMACAO_CARNEIRO
+# Calcula o próximo frame baseado em (Width * Height) + 8
+# =========================================================
+ATUALIZAR_ANIMACAO_CARNEIRO:
+    # 1. Verificar Timer (Controle de velocidade)
+    la t0, SHEEP_ANIM_TIMER
+    lw t1, 0(t0)
+    addi t1, t1, 1
+    li t2, 10              # VELOCIDADE: Aumente para ficar mais lento
+    sw t1, 0(t0)
+    blt t1, t2, FIM_ANIM_S # Se não deu o tempo, sai
 
+    # 2. Resetar Timer
+    sw zero, 0(t0)
+
+    # 3. Carregar Ponteiro do Frame Atual
+    la t0, SHEEP_FRAME_PTR
+    lw t1, 0(t0)           # t1 = Endereço do frame atual
+
+    # 4. Calcular o Tamanho do Frame Atual
+    # Estrutura: [Width (4b)] [Height (4b)] [Pixels...]
+    lw t2, 0(t1)           # Carrega Largura (W)
+    lw t3, 4(t1)           # Carrega Altura (H)
+    
+    # Cálculo: Offset = (W * H) + 8
+    # Nota: Assumindo 1 byte por pixel conforme seu código original
+    mul t4, t2, t3         # t4 = Quantidade de pixels
+    addi t4, t4, 8         # Adiciona 8 bytes do cabeçalho (W e H)
+
+    # 5. Avançar Ponteiro
+    add t1, t1, t4         # Ponteiro vai para o início do PRÓXIMO frame
+
+    # 6. Verificar se chegou ao fim do bloco .data
+    la t5, sheep_anim_end
+    bge t1, t5, RESET_LOOP_S
+
+    # Salva o novo ponteiro
+    sw t1, 0(t0)
+    ret
+
+    RESET_LOOP_S:
+    # Volta para o primeiro frame
+    la t1, sheep_anim_seq
+    sw t1, 0(t0)
+
+    FIM_ANIM_S:
+    ret
 #########################################################
 # TELA DE GAME OVER
 #########################################################
@@ -593,10 +660,7 @@ IMPRIMIR_TELA_CHEIA:
     ret
 
 #########################################################
-# FUNÇÕES GRÁFICAS
-#########################################################
-#########################################################
-# FUNÇÕES GRÁFICAS (CORRIGIDA PARA INIMIGOS DINÂMICOS)
+# FUNÇÕES GRÁFICAS (CORRIGIDA: EVITA CRASH NO MAPA 3)
 #########################################################
 DESENHAR_TUDO:
     addi sp, sp, -4
@@ -613,35 +677,32 @@ DESENHAR_TUDO:
     la a3, item_velocidade
     call DESENHAR_POSICAO
 
-# --- DESENHAR LISTA DE MOEDAS ---
-    li t0, 0                 # Índice (i)
-    la t1, LISTA_MOEDAS      # Ponteiro para o array
+    # --- DESENHAR LISTA DE MOEDAS ---
+    li t0, 0                 
+    la t1, LISTA_MOEDAS      
 
     LOOP_DRAW_MOEDAS:
-        li t2, QTD_MOEDAS    # Agora ele sabe que isso vale 5!
+        li t2, QTD_MOEDAS    
         bge t0, t2, FIM_DRAW_MOEDA
 
-        # Verifica se está ativa (Offset 4 bytes)
         lh t3, 4(t1)         
         beqz t3, NEXT_COIN_DRAW
 
-        # Prepara para desenhar
-        addi sp, sp, -8      # Salva registradores
+        addi sp, sp, -8      
         sw t0, 0(sp)
         sw t1, 4(sp)
 
-        mv a0, t1            # Passa endereço da moeda (X,Y)
+        mv a0, t1            
         la a3, coin_sprite   
-        # Frame s0 já está configurado
         call DESENHAR_POSICAO
 
-        lw t1, 4(sp)         # Restaura registradores
+        lw t1, 4(sp)         
         lw t0, 0(sp)
         addi sp, sp, 8
 
     NEXT_COIN_DRAW:
-        addi t1, t1, TAM_MOEDA_BYTES  # Pula 6 bytes (próxima moeda)
-        addi t0, t0, 1                # i++
+        addi t1, t1, TAM_MOEDA_BYTES  
+        addi t0, t0, 1                
         j LOOP_DRAW_MOEDAS
 
     FIM_DRAW_MOEDA:
@@ -662,48 +723,45 @@ DESENHAR_TUDO:
     bnez t1, PULAR_JOGADOR
     la a0, SAMARA_POS
     la t0, SAMARA_FRAME_ANIMACAO
-    lw a3, 0(t0)            # Carrega o quadro atual
+    lw a3, 0(t0)            
     call DESENHAR_POSICAO
     PULAR_JOGADOR:
 
-
-    
-    call DESENHAR_NOTAS_ATK   # <--- AQUI!
+    call DESENHAR_NOTAS_ATK   
     call DESENHAR_KIT
     
-    # === DESENHAR CARNEIROS (SÓ NO MAPA 3) ===
+    # === VERIFICA SE É MAPA 3 (CARNEIROS) ===
     la t0, MAPA_ATUAL
     lw t0, 0(t0)
     la t1, map_3
-    bne t0, t1, PULAR_DESENHO_CARNEIROS
+    bne t0, t1, DESENHAR_INIMIGOS_PADRAO # Se não for Mapa 3, desenha normal
 
+    # --- DESENHAR APENAS CARNEIROS ---
     la t0, SHEEP_ARRAY
     li t1, 0
     li t2, MAX_SHEEP
     
     LOOP_DRAW_SHEEP:
-        beq t1, t2, PULAR_DESENHO_CARNEIROS
-        lw t3, 8(t0)     # Ativo?
+        beq t1, t2, FIM_DESENHAR_TUDO_SAFE
+        lw t3, 8(t0)     
         beqz t3, NEXT_DRAW_S
         
-        # Desenha
         addi sp, sp, -12
         sw t0, 0(sp)
         sw t1, 4(sp)
         sw t2, 8(sp)
 
-        # Configura argumentos para DESENHAR_POSICAO
-        # Atenção: DESENHAR_POSICAO espera half-words (lh) no endereço a0
-        # Mas nossa struct usa words (lw). Vamos carregar manualmente.
-        
         lw a1, 0(t0)    # X
         lw a2, 4(t0)    # Y
-        la a0, sheep_sprite
-        mv a3, s0       # Frame
         
-        # Copiei a lógica de IMPRIMIR aqui direto ou adaptamos
-        # Vamos adaptar chamando IMPRIMIR direto para evitar confusão de structs
-        call IMPRIMIR   # (a0=sprite, a1=x, a2=y, a3=frame)
+        # --- ALTERAÇÃO AQUI ---
+        # Em vez de: la a0, sheep_sprite
+        la t4, SHEEP_FRAME_PTR
+        lw a0, 0(t4)    # Carrega o frame atual da animação
+        # ----------------------
+        
+        mv a3, s0       
+        call IMPRIMIR
         
         lw t2, 8(sp)
         lw t1, 4(sp)
@@ -715,8 +773,8 @@ DESENHAR_TUDO:
         addi t1, t1, 1
         j LOOP_DRAW_SHEEP
 
-    PULAR_DESENHO_CARNEIROS:
-# --- 4. POR ÚLTIMO OS INIMIGOS (USANDO PONTEIROS) ---
+    # --- 4. INIMIGOS PADRÃO (MAPA 1 E 2) ---
+    DESENHAR_INIMIGOS_PADRAO:
     
     # Slot 1: Verifica se é Mapa 1 (Bispo) ou Mapa 2 (Dama)
     la t0, MAPA_ATUAL
@@ -735,24 +793,23 @@ DESENHAR_TUDO:
     # Desenha Dama (Mapa 2)
     la t0, PTR_INIMIGO_1
     lw a0, 0(t0)
-    la a3, dama_sprite      # <--- USA O NOVO SPRITE
+    la a3, dama_sprite      
     call DESENHAR_POSICAO
 
- DRAW_SLOT_2:
-    # Slot 2: No Mapa 1 é Castelo, no Mapa 2 é Oculto
+    DRAW_SLOT_2:
+    # Slot 2: Torre
     la t0, PTR_INIMIGO_2
     lw a0, 0(t0)
     la a3, torre
     call DESENHAR_POSICAO
 
-    # === CORREÇÃO: DESENHAR O CAVALO (SLOT 3) ===
-    # Slot 3: No Mapa 1 é Cavalo, no Mapa 2 é Oculto
+    # Slot 3: Cavalo
     la t0, PTR_INIMIGO_3
-    lw a0, 0(t0)        # Carrega a posição (CAVALO_POS)
-    la a3, cavalo       # Carrega o sprite (verifique se o label no arquivo cavalo.data é 'cavalo')
+    lw a0, 0(t0)        
+    la a3, cavalo       
     call DESENHAR_POSICAO
-    # ============================================
     
+    FIM_DESENHAR_TUDO_SAFE:
     lw ra, 0(sp)
     addi sp, sp, 4
     ret
@@ -1624,17 +1681,24 @@ VERIFICAR_COLISAO_ATAQUE:
     lh t2, 0(a1)  # X2 (Inimigo)
     lh t3, 2(a1)  # Y2 (Inimigo)
     
-    li t4, 24     # <--- ALCANCE AUMENTADO! (Antes era 14)
-                  # Isso faz a espada acertar uma área muito maior
+    # Alcance da espada: 24 pixels
+    li t4, 24     
+    # Tamanho do Inimigo: 30 pixels (margem de segurança do 32)
+    li t6, 30
+
+    # Lógica de Caixa (AABB)
+    add t5, t2, t6        # X Inimigo + Largura Inimigo
+    bge t0, t5, SEM_COLISAO_ATK  # Espada tá à direita do inimigo?
     
-    add t5, t2, t4
-    bge t0, t5, SEM_COLISAO_ATK
-    add t5, t0, t4
-    ble t5, t2, SEM_COLISAO_ATK
-    add t5, t3, t4
-    bge t1, t5, SEM_COLISAO_ATK
-    add t5, t1, t4
-    ble t5, t3, SEM_COLISAO_ATK
+    add t5, t0, t4        # X Espada + Largura Espada
+    ble t5, t2, SEM_COLISAO_ATK  # Espada tá à esquerda do inimigo?
+    
+    add t5, t3, t6        # Y Inimigo + Altura Inimigo
+    bge t1, t5, SEM_COLISAO_ATK  # Espada tá abaixo?
+    
+    add t5, t1, t4        # Y Espada + Altura Espada
+    ble t5, t3, SEM_COLISAO_ATK  # Espada tá acima?
+    
     li a0, 1      # Acertou!
     ret
     SEM_COLISAO_ATK: 
@@ -1859,25 +1923,36 @@ LIMPAR_FUNDO_ITEM:
     addi sp, sp, 4
     ret
 
-# Lógica AABB (Axis-Aligned Bounding Box)
-# Verifica se dois retângulos se sobrepõem
+# =========================================================
+# Lógica AABB (Axis-Aligned Bounding Box) - 32x32 COMPATÍVEL
+# =========================================================
 VERIFICAR_COLISAO_CAIXA:
-    lh t0, 0(a0)  # X1
-    lh t1, 2(a0)  # Y1
-    lh t2, 0(a1)  # X2
-    lh t3, 2(a1)  # Y2
-    li t4, 8      # <--- ALTERADO: Tamanho da caixa de colisão (antigo 14)
+    lh t0, 0(a0)  # X1 (Objeto 1 - Ex: Samara)
+    lh t1, 2(a0)  # Y1 (Objeto 1)
+    lh t2, 0(a1)  # X2 (Objeto 2 - Ex: Inimigo 32x32)
+    lh t3, 2(a1)  # Y2 (Objeto 2)
     
-    add t5, t2, t4
-    bge t0, t5, SEM_COLISAO  # X1 >= X2 + Tam (tá à direita)
-    add t5, t0, t4
-    ble t5, t2, SEM_COLISAO  # X1 + Tam <= X2 (tá à esquerda)
-    add t5, t3, t4
-    bge t1, t5, SEM_COLISAO  # Y1 >= Y2 + Tam (tá abaixo)
-    add t5, t1, t4
-    ble t5, t3, SEM_COLISAO  # Y1 + Tam <= Y2 (tá acima)
+    # --- TAMANHO DA HITBOX ---
+    # Se o sprite é 32x32, usamos ~26 ou 28 para dar uma folga
+    li t4, 26      
+    
+    # Verifica sobreposição X
+    add t5, t2, t4      # X2 + Largura
+    bge t0, t5, SEM_COLISAO # Se X1 >= (X2 + Largura), tá à direita
+    
+    add t5, t0, t4      # X1 + Largura
+    ble t5, t2, SEM_COLISAO # Se (X1 + Largura) <= X2, tá à esquerda
+    
+    # Verifica sobreposição Y
+    add t5, t3, t4      # Y2 + Altura
+    bge t1, t5, SEM_COLISAO # Se Y1 >= (Y2 + Altura), tá abaixo
+    
+    add t5, t1, t4      # Y1 + Altura
+    ble t5, t3, SEM_COLISAO # Se (Y1 + Altura) <= Y2, tá acima
+    
     li a0, 1      # Bateu!
     ret
+    
     SEM_COLISAO: 
     li a0, 0      # Não bateu
     ret
@@ -1918,6 +1993,7 @@ CHECAR_COLISAO_MAPA:
 
 # =========================================================
 # VERIFICAR ENTRADA (MOVIMENTO + DIREÇÃO + ATAQUE + LOJA)
+# COM NOVA LÓGICA DE ANIMAÇÃO DINÂMICA
 # =========================================================
 VERIFICAR_ENTRADA:
     # 1. Salvar RA na pilha
@@ -1928,20 +2004,19 @@ VERIFICAR_ENTRADA:
     li t1, 0xFF200000
     lw t0, 0(t1)
     andi t0, t0, 1
-    beqz t0, RETORNAR_ENTRADA
+    beqz t0, RETORNAR_ENTRADA_NO_KEY
     lw t2, 4(t1)       # t2 = Tecla pressionada
     
     # --- PRIORIDADE DO ATAQUE ---
-    # Verifica o espaço ANTES de verificar movimento
     li t0, 32          # ASCII do Espaço
-    beq t2, t0, TENTAR_ATACAR
+    beq t2, t0, INPUT_ATACAR
     # ----------------------------------------
 
     # Carrega velocidade
     la t0, VELO_SAMARA
     lw t3, 0(t0)
     
-    li t6, 0    # <--- FLAG: 0 = Parado, 1 = Andou
+    li t6, 0    # FLAG: 0 = Parado, 1 = Andou
     
     # Verifica qual tecla foi apertada
     li t0, 'w'
@@ -1963,7 +2038,6 @@ VERIFICAR_ENTRADA:
         la t0, SAMARA_DIR
         li t1, 0
         sw t1, 0(t0)
-        # -----------------------------------
 
         la t0, SAMARA_POS
         lh t2, 0(t0)      # X atual
@@ -2012,7 +2086,6 @@ VERIFICAR_ENTRADA:
         beq t5, t4, TENTAR_ABRIR_LOJA
 
         # === RESET DEBOUNCE DA LOJA ===
-        # Se t5 == 0 (Chão Livre), reseta o debounce
         bnez t5, CHECK_WALL_W
         la t4, LOJA_DEBOUNCE
         sw zero, 0(t4)
@@ -2023,8 +2096,12 @@ VERIFICAR_ENTRADA:
         
         # Se livre:
         sh t1, 2(t0)
-        li t6, 1          # Marca que andou
-        j PROCESSAR_ANIMACAO
+        
+        # --- CHAMA ANIMAÇÃO W (3 Frames) ---
+        la a0, SEQ_W       # Label da sequência no .data
+        li a1, 3           # Quantidade de frames
+        call PROCESSAR_ANIM_ESTADO
+        j RETORNAR_ENTRADA
 
     # -----------------------------------------------------
     # MOVIMENTO BAIXO (S)
@@ -2034,7 +2111,6 @@ VERIFICAR_ENTRADA:
         la t0, SAMARA_DIR
         li t1, 1
         sw t1, 0(t0)
-        # ------------------------------------
 
         la t0, SAMARA_POS
         lh t2, 0(t0)
@@ -2091,8 +2167,12 @@ VERIFICAR_ENTRADA:
         bnez t5, RETORNAR_ENTRADA
         
         sh t1, 2(t0)
-        li t6, 1
-        j PROCESSAR_ANIMACAO
+        
+        # --- CHAMA ANIMAÇÃO S (3 Frames) ---
+        la a0, SEQ_S
+        li a1, 3
+        call PROCESSAR_ANIM_ESTADO
+        j RETORNAR_ENTRADA
 
     # -----------------------------------------------------
     # MOVIMENTO ESQUERDA (A)
@@ -2102,7 +2182,6 @@ VERIFICAR_ENTRADA:
         la t0, SAMARA_DIR
         li t1, 2
         sw t1, 0(t0)
-        # ----------------------------------
 
         la t0, SAMARA_POS
         lh t1, 0(t0)
@@ -2158,8 +2237,12 @@ VERIFICAR_ENTRADA:
         bnez t5, RETORNAR_ENTRADA
         
         sh t1, 0(t0)
-        li t6, 1
-        j PROCESSAR_ANIMACAO
+        
+        # --- CHAMA ANIMAÇÃO A (2 Frames) ---
+        la a0, SEQ_A
+        li a1, 2
+        call PROCESSAR_ANIM_ESTADO
+        j RETORNAR_ENTRADA
 
     # -----------------------------------------------------
     # MOVIMENTO DIREITA (D)
@@ -2169,7 +2252,6 @@ VERIFICAR_ENTRADA:
         la t0, SAMARA_DIR
         li t1, 3
         sw t1, 0(t0)
-        # ----------------------------------
 
         la t0, SAMARA_POS
         lh t1, 0(t0)
@@ -2227,8 +2309,12 @@ VERIFICAR_ENTRADA:
         bnez t5, RETORNAR_ENTRADA
         
         sh t1, 0(t0)
-        li t6, 1
-        j PROCESSAR_ANIMACAO
+        
+        # --- CHAMA ANIMAÇÃO D (2 Frames) ---
+        la a0, SEQ_D
+        li a1, 2
+        call PROCESSAR_ANIM_ESTADO
+        j RETORNAR_ENTRADA
     
     # -----------------------------------------------------
     # LÓGICA DE ABRIR A LOJA
@@ -2248,6 +2334,34 @@ VERIFICAR_ENTRADA:
         sw t1, 0(t0)
         
         j RETORNAR_ENTRADA
+
+    # -----------------------------------------------------
+    # INPUT DE ATAQUE (ESPAÇO)
+    # -----------------------------------------------------
+    INPUT_ATACAR:
+        call TENTAR_ATACAR
+
+        # --- CHAMA ANIMAÇÃO DE ATAQUE (3 Frames) ---
+        la a0, SEQ_ATK
+        li a1, 3
+        call PROCESSAR_ANIM_ESTADO
+        j RETORNAR_ENTRADA
+
+    # -----------------------------------------------------
+    # SAÍDA DA FUNÇÃO
+    # -----------------------------------------------------
+    RETORNAR_ENTRADA:
+        lw ra, 0(sp)
+        addi sp, sp, 4
+        ret
+
+    RETORNAR_ENTRADA_NO_KEY:
+        # Se não tem tecla pressionada, não chamamos PROCESSAR_ANIM_ESTADO.
+        # O ponteiro de frame não atualiza, fazendo a animação "parar"
+        # no último frame desenhado (efeito correto).
+        lw ra, 0(sp)
+        addi sp, sp, 4
+        ret
 
     # -----------------------------------------------------
     # TENTAR ATACAR (BUSCA SLOT VAZIO)
@@ -2442,7 +2556,7 @@ MUDAR_PARA_MAPA_2:
 MUDAR_PARA_MAPA_3:
     # 1. Troca Imagem e Colisão
     la t0, MAPA_ATUAL
-    la t1, map_3        # Usa map 1 para evitar crash de leitura
+    la t1, map_3        
     sw t1, 0(t0)
     
     la t0, PTR_HIT_MAP
@@ -2457,6 +2571,22 @@ MUDAR_PARA_MAPA_3:
     sw t0, 0(t1)
     la t1, PTR_INIMIGO_3
     sw t0, 0(t1)
+    
+    # === CORREÇÃO: LIMPEZA DE ESTADO SUJO ===
+    
+    # A) Remove todos os tiros da tela (Zera TIRO_ATIVO)
+    la t0, TIRO_ATIVO
+    sw zero, 0(t0)
+    sw zero, 4(t0)
+    sw zero, 8(t0)
+
+    # B) Reseta o Pet (Para de buscar itens antigos)
+    la t0, KIT_STATE
+    sw zero, 0(t0)     # Volta para o estado 0 (Seguir Samara)
+    la t0, KIT_TARGET_PTR
+    sw zero, 0(t0)     # Limpa ponteiro de alvo
+    
+    # ========================================
 
     # 3. RESET E SPAWN DOS 8 CARNEIROS
     la t0, SHEEP_COUNT
@@ -2464,6 +2594,7 @@ MUDAR_PARA_MAPA_3:
     la t0, SHEEP_TIMER
     sw zero, 0(t0)
     
+    # ... (O resto da sua função continua igual)
     # --- LIMPEZA TOTAL DO ARRAY ---
     la t0, SHEEP_ARRAY
     li t1, 60 
@@ -2610,314 +2741,220 @@ ATUALIZAR_INIMIGOS:
     addi sp, sp, 4
     ret
 
-# CAVALO 
+# CAVALO - Lógica 32x32
 MOVER_CAVALO:
     addi sp, sp, -4
     sw ra, 0(sp)
 
-    # Carrega Estado e Contador
     la a1, CAVALO_STATE
     la a2, CAVALO_CONT
-    lw t0, 0(a1)        # t0 = Estado (0=Y, 1=X)
-    lw t1, 0(a2)        # t1 = Contador de passos
+    lw t0, 0(a1)        
+    lw t1, 0(a2)        
     
-    # Decide se move X ou Y
     bnez t0, CAVALO_MOVER_Y 
 
-    # ========================
-    # MOVIMENTO EIXO X (Estado 0)
-    # ========================
+    # --- MOVIMENTO X ---
     CAVALO_MOVER_X:
         la t6, CAVALO_X
-        lw t3, 0(t6)        # t3 = Vel X
+        lw t3, 0(t6)        
         la a0, CAVALO_POS
-        lh t4, 0(a0)        # t4 = X Atual
-        add t4, t4, t3      # t4 = X Futuro
+        lh t4, 0(a0)        
+        add t4, t4, t3      
         
-        # --- COLISÃO X ---
-        # Salva t0 (Estado) e t1 (Contador) na pilha para não perder
-        addi sp, sp, -12
-        sw t0, 0(sp)
-        sw t1, 4(sp)
-        sw t4, 8(sp) # Salva X Futuro
-
-        # Prepara Check
-        mv a0, t4
-        blt t3, zero, VERIFICAR_CANTO_X_ESQ
-        addi a0, a0, 8     # Se direita, checa lado direito
-        VERIFICAR_CANTO_X_ESQ:
-        la t2, CAVALO_POS
-        lh a1, 2(t2)        # Y Atual
-        addi a1, a1, 8      # Meio da altura
-        call CHECAR_COLISAO_MAPA
-        
-        # O resultado da colisão está em a0
-        mv t5, a0 
-
-        # Restaura
-        lw t4, 8(sp)
-        lw t1, 4(sp)
-        lw t0, 0(sp)
-        addi sp, sp, 12
-
-        # Se bateu parede (t5=1), trata colisão
-        bnez t5, CAVALO_BATEU_X
-        
-        # Se bateu borda tela, trata colisão
-        li t2, 296
-        bge t4, t2, CAVALO_BATEU_X
-        li t2, 8
-        blt t4, t2, CAVALO_BATEU_X
-        
-        # --- MOVIMENTO LIVRE ---
-        la a0, CAVALO_POS
-        sh t4, 0(a0)        # Atualiza X
-        
-        addi t1, t1, 1      # Incrementa contador
-        li t2, 30
-        blt t1, t2, CAVALO_SAIR # Se < 30, só sai
-        
-        # Timer estourou: Troca Eixo
-        li t1, 0            # Zera contador
-        li t0, 1            # Muda estado para Y
-        j CAVALO_SALVAR_ESTADO
-        
-        # --- BATEU ---
-        CAVALO_BATEU_X: 
-        la t6, CAVALO_X
-        lw t3, 0(t6)
-        sub t3, zero, t3    # Inverte Vel
-        sw t3, 0(t6)
-        
-        li t1, 0            # Zera contador
-        li t0, 1            # Força troca para Y
-        j CAVALO_SALVAR_ESTADO
-
-    # ========================
-    # MOVIMENTO EIXO Y (Estado 1)
-    # ========================
-    CAVALO_MOVER_Y:
-        la t5, CAVALO_Y
-        lw t3, 0(t5)        # t3 = Vel Y
-        la a0, CAVALO_POS
-        lh t4, 2(a0)        # t4 = Y Atual
-        add t4, t4, t3      # t4 = Y Futuro
-        
-        # --- COLISÃO Y ---
         addi sp, sp, -12
         sw t0, 0(sp)
         sw t1, 4(sp)
         sw t4, 8(sp)
 
-        # Prepara Check
+        mv a0, t4
+        blt t3, zero, VERIFICAR_CANTO_X_ESQ
+        addi a0, a0, 28     # <--- X + 28
+        VERIFICAR_CANTO_X_ESQ:
         la t2, CAVALO_POS
-        lh a0, 0(t2)        # X Atual
-        addi a0, a0, 8      # Meio da largura
-        mv a1, t4           # Y Futuro
-        blt t3, zero, CHK_C_Y_CIMA
-        addi a1, a1, 8     # Se baixo, checa pé
-        CHK_C_Y_CIMA:
+        lh a1, 2(t2)        
+        addi a1, a1, 16     # <--- Y + 16 (Meio)
         call CHECAR_COLISAO_MAPA
-        
-        mv t5, a0           # Resultado
+        mv t5, a0 
 
         lw t4, 8(sp)
         lw t1, 4(sp)
         lw t0, 0(sp)
         addi sp, sp, 12
 
-        # Colisões
+        bnez t5, CAVALO_BATEU_X
+        
+        li t2, 288          # <--- 320 - 32
+        bge t4, t2, CAVALO_BATEU_X
+        li t2, 8
+        blt t4, t2, CAVALO_BATEU_X
+        
+        la a0, CAVALO_POS
+        sh t4, 0(a0)        
+        
+        addi t1, t1, 1      
+        li t2, 30
+        blt t1, t2, CAVALO_SAIR 
+        
+        li t1, 0            
+        li t0, 1            
+        j CAVALO_SALVAR_ESTADO
+        
+        CAVALO_BATEU_X: 
+        la t6, CAVALO_X
+        lw t3, 0(t6)
+        sub t3, zero, t3    
+        sw t3, 0(t6)
+        li t1, 0            
+        li t0, 1            
+        j CAVALO_SALVAR_ESTADO
+
+    # --- MOVIMENTO Y ---
+    CAVALO_MOVER_Y:
+        la t5, CAVALO_Y
+        lw t3, 0(t5)        
+        la a0, CAVALO_POS
+        lh t4, 2(a0)        
+        add t4, t4, t3      
+        
+        addi sp, sp, -12
+        sw t0, 0(sp)
+        sw t1, 4(sp)
+        sw t4, 8(sp)
+
+        la t2, CAVALO_POS
+        lh a0, 0(t2)        
+        addi a0, a0, 16     # <--- X + 16 (Meio)
+        mv a1, t4           
+        blt t3, zero, CHK_C_Y_CIMA
+        addi a1, a1, 28     # <--- Y + 28
+        CHK_C_Y_CIMA:
+        call CHECAR_COLISAO_MAPA
+        mv t5, a0           
+
+        lw t4, 8(sp)
+        lw t1, 4(sp)
+        lw t0, 0(sp)
+        addi sp, sp, 12
+
         bnez t5, CAVALO_BATEU_Y
-        li t2, 216
+        li t2, 208          # <--- 240 - 32
         bge t4, t2, CAVALO_BATEU_Y
         li t2, 8
         blt t4, t2, CAVALO_BATEU_Y
         
-        # --- MOVIMENTO LIVRE ---
         la a0, CAVALO_POS
-        sh t4, 2(a0)        # Atualiza Y
+        sh t4, 2(a0)        
         
         addi t1, t1, 1
         li t2, 30
         blt t1, t2, CAVALO_SAIR
         
-        # Timer estourou: Troca Eixo
         li t1, 0
-        li t0, 0            # Muda estado para X
+        li t0, 0            
         j CAVALO_SALVAR_ESTADO
 
-        # --- BATEU ---
         CAVALO_BATEU_Y:
         la t5, CAVALO_Y
         lw t3, 0(t5)
         sub t3, zero, t3
         sw t3, 0(t5)
-        
         li t1, 0
-        li t0, 0            # Força troca para X
+        li t0, 0            
         j CAVALO_SALVAR_ESTADO
 
-    # ========================
-    # SALVAR E SAIR
-    # ========================
     CAVALO_SALVAR_ESTADO: 
     la a1, CAVALO_STATE
-    sw t0, 0(a1)        # Salva novo Estado
-    # Cai no salvar contador...
-
+    sw t0, 0(a1)        
     CAVALO_SAIR:
     la a2, CAVALO_CONT
-    sw t1, 0(a2)        # Salva novo Contador
-    
+    sw t1, 0(a2)        
     lw ra, 0(sp)
     addi sp, sp, 4
     ret
-# CASTELO 
+
+# CASTELO (Torre) - Lógica 32x32
 MOVER_CASTELO:
     addi sp, sp, -4
-    sw ra, 0(sp)      # 1. Salva o retorno (RA)
+    sw ra, 0(sp)
 
     la a0, CASTELO_POS
     la a1, CASTELO_X
     lh t0, 0(a0)      # X Atual
     lw t2, 0(a1)      # Velocidade
-    add t0, t0, t2    # X Futuro (Tentativa)
+    add t0, t0, t2    # X Futuro
 
-    # --- CHECK 1: Canto Esquerdo (X_Futuro, Y) ---
-    # Salva registradores importantes antes de chamar função
+    # --- CHECK 1: Canto Esquerdo (X_Futuro, Y + Centro) ---
     addi sp, sp, -16
     sw t0, 0(sp)
     sw t2, 4(sp)
     sw a0, 8(sp)
     sw a1, 12(sp)
 
-    mv a0, t0           # Argumento X: X Futuro
+    mv a0, t0           # X Futuro
     la t5, CASTELO_POS
-    lh a1, 2(t5)        # Argumento Y: Y Atual
-    addi a1, a1, 8      # (+8) Pega o meio da altura pra não prender no chão
+    lh a1, 2(t5)        # Y Atual
+    addi a1, a1, 16     # <--- Y + 16 (Centro da altura 32)
     call CHECAR_COLISAO_MAPA
-    mv t5, a0           # t5 = Resultado Check 1
+    mv t5, a0           
 
-    # --- CHECK 2: Canto Direito (X_Futuro + 14, Y) ---
-    lw t0, 0(sp)        # Recupera X Futuro da pilha
+    # --- CHECK 2: Canto Direito (X_Futuro + 28, Y + Centro) ---
+    lw t0, 0(sp)        
     mv a0, t0
-    addi a0, a0, 8     # Checa o lado direito (largura do sprite)
+    addi a0, a0, 28     # <--- X + 28 (Borda Direita do Sprite 32)
     la t6, CASTELO_POS
     lh a1, 2(t6)
-    addi a1, a1, 8      # Altura média
+    addi a1, a1, 16     # <--- Y + 16 (Centro)
     
-    # Salva t5 na pilha rapidinho
     addi sp, sp, -4
     sw t5, 0(sp)
     call CHECAR_COLISAO_MAPA
     lw t5, 0(sp)
     addi sp, sp, 4
 
-    or t5, t5, a0       # t5 = (Bateu Esq) OU (Bateu Dir)
+    or t5, t5, a0       # Bateu na Esq OU na Dir?
 
-    # Restaura tudo da pilha
     lw a1, 12(sp)
     lw a0, 8(sp)
     lw t2, 4(sp)
     lw t0, 0(sp)
     addi sp, sp, 16
 
-    # Se bateu no mapa (t5 != 0), inverte a direção
     bnez t5, INVERTER_CASTELO
 
-    # Check Bordas da Tela (Segurança extra)
-    li t3, 296
+    # Check Bordas da Tela (Considerando 32px)
+    li t3, 288          # <--- 320 - 32 = 288 (Borda direita segura)
     bge t0, t3, INVERTER_CASTELO
     li t3, 8
     blt t0, t3, INVERTER_CASTELO
     
-    sh t0, 0(a0) # Se livre, salva movimento
-    
-    lw ra, 0(sp)      # Restaura RA
+    sh t0, 0(a0) 
+    lw ra, 0(sp)      
     addi sp, sp, 4
     ret
     
     INVERTER_CASTELO: 
-    sub t2, zero, t2  # Inverte velocidade
+    sub t2, zero, t2  
     sw t2, 0(a1)
-    
-    lw ra, 0(sp)      # Restaura RA
+    lw ra, 0(sp)
     addi sp, sp, 4
     ret
 
-# BISPO 
+# BISPO (Slime Diagonal) - Lógica 32x32
 MOVER_BISPO:
     addi sp, sp, -4
     sw ra, 0(sp)
 
-    # Carrega dados iniciais
     la a0, BISPO_POS
     la a1, BISPO_X
     la a2, BISPO_Y
-    lh t0, 0(a0)      # X Atual
-    lh t1, 2(a0)      # Y Atual
+    lh t0, 0(a0)      # X
+    lh t1, 2(a0)      # Y
     lw t2, 0(a1)      # Vel X
     lw t3, 0(a2)      # Vel Y
 
-    # ==========================
-    # MOVIMENTO X
-    # ==========================
-    add t4, t0, t2    # t4 = X Futuro
+    # === MOVIMENTO X ===
+    add t4, t0, t2    
     
-    # Salva contexto na pilha
-    addi sp, sp, -20
-    sw t0, 0(sp)
-    sw t1, 4(sp)
-    sw t2, 8(sp)
-    sw t3, 12(sp)
-    sw t4, 16(sp)     # Salva X Futuro
-
-    # Prepara Check X
-    mv a0, t4         # Testar X Futuro
-    blt t2, zero, VERIFICAR_BISPO_X
-    addi a0, a0, 14   # Se direita, testa borda direita
-    VERIFICAR_BISPO_X:
-    la t6, BISPO_POS
-    lh a1, 2(t6)      # Y Atual
-    addi a1, a1, 8    # Altura média
-    call CHECAR_COLISAO_MAPA
-    mv t5, a0         # t5 = Colidiu?
-
-    # Restaura
-    lw t4, 16(sp)
-    lw t3, 12(sp)
-    lw t2, 8(sp)
-    lw t1, 4(sp)
-    lw t0, 0(sp)
-    addi sp, sp, 20
-
-    # Lógica de Colisão X
-    bnez t5, INVERTER_BISPO_X
-    
-    # Check Bordas Tela X
-    li t6, 296
-    bge t4, t6, INVERTER_BISPO_X
-    li t6, 8
-    blt t4, t6, INVERTER_BISPO_X
-    
-    # Se livre, aceita novo X
-    mv t0, t4
-    j FIM_BISPO_X
-
-    INVERTER_BISPO_X:
-    sub t2, zero, t2  # Inverte Vel X
-    la a1, BISPO_X    # <--- RECARREGA ENDEREÇO (Segurança)
-    sw t2, 0(a1)      # Salva Vel X
-    # t0 continua sendo o X antigo (não anda)
-
-    FIM_BISPO_X:
-
-    # ==========================
-    # MOVIMENTO Y
-    # ==========================
-    add t4, t1, t3    # t4 = Y Futuro
-    
-    # Salva contexto
     addi sp, sp, -20
     sw t0, 0(sp)
     sw t1, 4(sp)
@@ -2925,18 +2962,16 @@ MOVER_BISPO:
     sw t3, 12(sp)
     sw t4, 16(sp)
 
-    # Prepara Check Y
-    mv a1, t4         # Testar Y Futuro
-    blt t3, zero, CHK_B_Y
-    addi a1, a1, 8   # Se baixo, testa pé
-    CHK_B_Y:
-    # Usa o t0 (X já atualizado) para o teste ficar fluido
-    mv a0, t0         
-    addi a0, a0, 8    # Meio do corpo
+    mv a0, t4         
+    blt t2, zero, VERIFICAR_BISPO_X
+    addi a0, a0, 28   # <--- Se indo pra direita, checa X + 28
+    VERIFICAR_BISPO_X:
+    la t6, BISPO_POS
+    lh a1, 2(t6)      
+    addi a1, a1, 16   # <--- Checa Y no meio (16)
     call CHECAR_COLISAO_MAPA
-    mv t5, a0
+    mv t5, a0         
 
-    # Restaura
     lw t4, 16(sp)
     lw t3, 12(sp)
     lw t2, 8(sp)
@@ -2944,29 +2979,67 @@ MOVER_BISPO:
     lw t0, 0(sp)
     addi sp, sp, 20
 
-    # Lógica de Colisão Y
+    bnez t5, INVERTER_BISPO_X
+    
+    # Limites de tela (32px)
+    li t6, 288        # <--- 320 - 32
+    bge t4, t6, INVERTER_BISPO_X
+    li t6, 8
+    blt t4, t6, INVERTER_BISPO_X
+    
+    mv t0, t4
+    j FIM_BISPO_X
+
+    INVERTER_BISPO_X:
+    sub t2, zero, t2  
+    la a1, BISPO_X    
+    sw t2, 0(a1)      
+
+    FIM_BISPO_X:
+
+    # === MOVIMENTO Y ===
+    add t4, t1, t3    
+    
+    addi sp, sp, -20
+    sw t0, 0(sp)
+    sw t1, 4(sp)
+    sw t2, 8(sp)
+    sw t3, 12(sp)
+    sw t4, 16(sp)
+
+    mv a1, t4         
+    blt t3, zero, CHK_B_Y
+    addi a1, a1, 28   # <--- Se indo pra baixo, checa Y + 28
+    CHK_B_Y:
+    mv a0, t0         
+    addi a0, a0, 16   # <--- Checa X no meio (16)
+    call CHECAR_COLISAO_MAPA
+    mv t5, a0
+
+    lw t4, 16(sp)
+    lw t3, 12(sp)
+    lw t2, 8(sp)
+    lw t1, 4(sp)
+    lw t0, 0(sp)
+    addi sp, sp, 20
+
     bnez t5, INVERTER_BISPO_Y
     
-    # Check Bordas Tela Y
-    li t6, 216
+    li t6, 208        # <--- 240 - 32
     bge t4, t6, INVERTER_BISPO_Y
     li t6, 8
     blt t4, t6, INVERTER_BISPO_Y
     
-    # Se livre, aceita novo Y
     mv t1, t4
     j FIM_BISPO_Y
 
     INVERTER_BISPO_Y:
-    sub t3, zero, t3  # Inverte Vel Y
-    la a2, BISPO_Y    # <--- RECARREGA ENDEREÇO
+    sub t3, zero, t3  
+    la a2, BISPO_Y    
     sw t3, 0(a2)
-    # t1 continua sendo o Y antigo
 
     FIM_BISPO_Y:
-    
-    # Salva Posição Final
-    la a0, BISPO_POS  # <--- RECARREGA ENDEREÇO
+    la a0, BISPO_POS  
     sh t0, 0(a0)
     sh t1, 2(a0)
 
@@ -3530,6 +3603,8 @@ LOGICA_CARNEIROS:
     sw s4, 20(sp) # Player Y
     sw s5, 24(sp) # Tempo
 
+    call ATUALIZAR_ANIMACAO_CARNEIRO
+    
     # 1. Carrega Posição do Player e Tempo
     la t0, SAMARA_POS
     lh s3, 0(t0)
@@ -3799,7 +3874,95 @@ CHECAR_COLISAO_ENTRE_CARNEIROS:
     FIM_CHECK_COLL_SAFE:
     li a0, 0             
     ret
+# =========================================================
+# PROCESSAR_ANIM_ESTADO
+# Entrada: 
+#   a0 = Endereço Base da Sequência (Ex: SEQ_W)
+#   a1 = Quantidade Máxima de Frames (Ex: 3)
+# =========================================================
+PROCESSAR_ANIM_ESTADO:
+    addi sp, sp, -12
+    sw t0, 0(sp)
+    sw t1, 4(sp)
+    sw t2, 8(sp)
 
+    # 1. Verifica se mudou de estado (Ex: estava em W, foi pra D)
+    la t0, ANIM_SEQ_ATUAL
+    lw t1, 0(t0)
+    beq t1, a0, CHECK_TIMER   # Se é a mesma sequência, verifica o tempo
+    
+    # --- MUDOU DE ESTADO (RESET IMEDIATO) ---
+    sw a0, 0(t0)              # Salva nova sequência como atual
+    la t0, ANIM_INDEX_ATUAL
+    sw zero, 0(t0)            # Reseta índice para 0
+    la t0, ANIM_TIMER
+    sw zero, 0(t0)            # Reseta timer pra trocar já
+    
+    # Atualiza o ponteiro de desenho imediatamente para o frame 0 da nova seq
+    la t0, SAMARA_FRAME_ANIMACAO
+    sw a0, 0(t0)
+    j FIM_ANIM_PROC
+
+    # 2. Controle de Velocidade (Timer)
+    CHECK_TIMER:
+    la t0, ANIM_TIMER
+    lw t1, 0(t0)
+    addi t1, t1, 1
+    la t2, ANIM_DELAY_LIMIT
+    lw t2, 0(t2)
+    sw t1, 0(t0)              # Salva timer ++
+    blt t1, t2, FIM_ANIM_PROC # Se não deu o tempo, sai (mantém frame atual)
+
+    # --- TROCAR FRAME (Time to switch!) ---
+    sw zero, 0(t0)            # Reseta timer
+
+    # 3. Avança Índice do Frame
+    la t0, ANIM_INDEX_ATUAL
+    lw t1, 0(t0)              # Índice atual (ex: 0)
+    addi t1, t1, 1            # Próximo (ex: 1)
+    
+    # Verifica Loop (Se Index >= MaxFrames, volta pra 0)
+    blt t1, a1, CALC_POINTER
+    li t1, 0                  # Loop volta pro começo
+
+    CALC_POINTER:
+    sw t1, 0(t0)              # Salva novo índice
+
+    # 4. CALCULAR ENDEREÇO NA MEMÓRIA (O PULO DO GATO)
+    # Lógica: Pointer = BaseAddress
+    # Repete 'Index' vezes: Pointer = Pointer + (W * H) + 8
+    
+    mv t2, a0                 # t2 começa na Base (Frame 0)
+    mv t3, t1                 # t3 é o contador de loops (Índice)
+
+    LOOP_FIND_FRAME:
+        beqz t3, UPDATE_RENDER_PTR  # Se contador é 0, t2 é o endereço correto
+        
+        # Lê cabeçalho do frame atual para saber o tamanho
+        lw t4, 0(t2)          # Largura (W)
+        lw t5, 4(t2)          # Altura (H)
+        
+        # Calcula tamanho em bytes: (W * H) + 8 bytes de cabeçalho
+        mul t6, t4, t5        # Pixels
+        addi t6, t6, 8        # + 8 bytes (Offset Largura + Altura)
+        
+        # Avança ponteiro para o próximo frame
+        add t2, t2, t6        
+        
+        addi t3, t3, -1       # Decrementa loop
+        j LOOP_FIND_FRAME
+
+    UPDATE_RENDER_PTR:
+    # 5. Atualiza a variável global que o DESENHAR_TUDO usa
+    la t0, SAMARA_FRAME_ANIMACAO
+    sw t2, 0(t0)
+
+    FIM_ANIM_PROC:
+    lw t2, 8(sp)
+    lw t1, 4(sp)
+    lw t0, 0(sp)
+    addi sp, sp, 12
+    ret
 # =========================================================
 # SPAWNAR TRIO (SIMPLIFICADO)
 # Procura 3 vagas livres e coloca carneiros em posições aleatórias seguras
@@ -4056,6 +4219,7 @@ DESCONTAR_MOEDA:
 .include "sprites/coin.s"
 .include "sprites/tilein.data"
 .include "sprites/map.s"
+.include "sprites/sheep.data"
 .include "sprites/char.s"
 .include "sprites/sword_sprite.data"
 .include "sprites/Water_Slime_Front.data"
