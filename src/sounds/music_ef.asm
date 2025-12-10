@@ -145,7 +145,7 @@ TOCAR_SOM_PASSO:
     la t0, PASSO_TIMER
     lw t1, 0(t0)
     addi t1, t1, 1      
-    li t2, 5           
+    li t2, 40           
     blt t1, t2, SAI_SOM_PASSO  
     
     sw zero, 0(t0)      # Reseta timer
@@ -170,4 +170,37 @@ TOCAR_SOM_PASSO:
     addi sp, sp, 4
     ret
 
-    
+# =========================================================
+# SOM DE MIADO MELHORADO (Efeito "Mi-a-u")
+# =========================================================
+TOCAR_SOM_MIADO:
+    addi sp, sp, -4
+    sw ra, 0(sp)
+
+    # Nota 1: "Mi" (Começa médio)
+    li a7, 31       # Syscall MIDI
+    li a0, 74       # Nota Ré (D) agudo
+    li a1, 100      # Duração curta (100ms)
+    li a2, 53       # Instrumento 53: Voice Oohs (Parece voz/vocal)
+    li a3, 90       # Volume
+    ecall
+
+    # Nota 2: "A..." (Sobe o tom - pico do miado)
+    li a7, 31
+    li a0, 78       # Nota Fá# (F#) mais aguda
+    li a1, 150      # Duração média
+    li a2, 53       # Mesmo instrumento
+    li a3, 100      # Volume máximo
+    ecall
+
+    # Nota 3: "...u" (Desce o tom finalizando)
+    li a7, 31
+    li a0, 71       # Nota Si (B) mais grave
+    li a1, 250      # Duração mais longa (o final do miado arrasta)
+    li a2, 53
+    li a3, 80       # Volume diminui um pouco
+    ecall
+
+    lw ra, 0(sp)
+    addi sp, sp, 4
+    ret  
