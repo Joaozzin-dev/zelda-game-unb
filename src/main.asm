@@ -445,6 +445,7 @@ LOOP_DO_JOGO:
         call DESENHAR_TUDO
         call DESENHAR_VIDAS # Inclui o HUD de moedas
         
+        call DESENHAR_FUNDO_VIOLETA
         # 2. Desenha o Overlay da Loja
         call DESENHAR_LOJA_OVERLAY
         
@@ -810,6 +811,57 @@ DESENHAR_TUDO:
     call DESENHAR_POSICAO
     
     FIM_DESENHAR_TUDO_SAFE:
+    lw ra, 0(sp)
+    addi sp, sp, 4
+    ret
+
+# =========================================================
+# EFEITO DE TELA ESCURA/VIOLETA (DITHERING)
+# Cria uma malha pixel sim/pixel não para escurecer o fundo
+# =========================================================
+DESENHAR_FUNDO_VIOLETA:
+addi sp, sp, -4
+    sw ra, 0(sp)
+    
+    li t4, 0x00          # Cor PRETA
+    
+    li t0, 0xFF0         # Base Vídeo
+    add t0, t0, s0       # Frame atual
+    slli t0, t0, 20      # Endereço real
+    
+    li t1, 0             # Y
+    
+    # --- ALTERAÇÃO AQUI ---
+    # Altura Total (240) - HUD (32) = 208
+    li t2, 208           # <--- O EFEITO PARA AQUI
+    # ----------------------
+
+    LOOP_Y_DARK:
+        beq t1, t2, FIM_DARK
+        li t3, 0         # X
+        li t5, 320       # Largura
+
+        LOOP_X_DARK:
+            beq t3, t5, NEXT_LINE_DARK
+            
+            # Lógica do Xadrez (Par/Ímpar)
+            add t6, t1, t3    
+            andi t6, t6, 1    
+            bnez t6, SKIP_PIXEL_DARK 
+            
+            # Pinta pixel PRETO
+            sb t4, 0(t0)
+
+            SKIP_PIXEL_DARK:
+            addi t0, t0, 1    
+            addi t3, t3, 1    
+            j LOOP_X_DARK
+
+        NEXT_LINE_DARK:
+            addi t1, t1, 1    
+            j LOOP_Y_DARK
+
+    FIM_DARK:
     lw ra, 0(sp)
     addi sp, sp, 4
     ret
@@ -4140,8 +4192,12 @@ DESENHAR_LOJA_OVERLAY:
     sw ra, 0(sp)
     
     la a0, shop_sprite   # Sprite incluído no .data
-    li a1, 60            # X (Centralizado aprox. 320 - largura / 2)
-    li a2, 40            # Y
+    
+    # --- COORDENADAS CENTRALIZADAS ---
+    li a1, 96            # X = (320 - 128) / 2
+    li a2, 75            # Y = (240 - 90) / 2
+    # ---------------------------------
+    
     mv a3, s0            # Frame atual
     call IMPRIMIR
     
