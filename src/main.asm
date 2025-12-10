@@ -190,8 +190,8 @@ SEQ_D_END:
 # --- SEQUÊNCIA ESPAÇO (ATAQUE - 3 FRAMES) ---
 SEQ_ATK:
     .include "sprites/samara_atk1.data"
-    # .include "sprites/samara_atk2.data"
-    # .include "sprites/samara_atk3.data"
+    .include "sprites/samara_atk2.data"
+    .include "sprites/samara_atk3.data"
 SEQ_ATK_END:
 
 # Sprite da loja (Overlay)
@@ -1528,10 +1528,21 @@ PROCESSAR_ATAQUE:
             bgt t6, a4, NEXT_ATK_S
             
             # === ACERTOU CARNEIRO ===
-            # Regra: NÃO MATA. Apenas aplica Slow.
-            li t6, 120       # 120 frames = 2 segundos de lentidão
-            sw t6, 12(s3)    # Define SlowTimer no offset 12 da struct
             
+            # APLICA LENTIDÃO (SLOW)
+            lw t6, 12(s3)      
+            li a4, 0x0000FFFF  
+            and t6, t6, a4     
+            
+            li a4, 180         
+            slli a4, a4, 16    
+            or t6, t6, a4      
+            sw t6, 12(s3)      
+            
+            # --- CORREÇÃO AQUI ---
+            addi sp, sp, 8     # <--- ADICIONE ESTA LINHA (Limpa a pilha antes de sair)
+            # ---------------------
+
             # O TIRO MORRE
             j MATAR_TIRO
 
@@ -1541,7 +1552,8 @@ PROCESSAR_ATAQUE:
             j LOOP_ATK_SHEEP
 
         PULA_ATK_SHEEP:
-        
+
+
         # -- Inimigo 1 --
         sw t0, 4(sp)        # Salva t0 (Endereço Ativo) rapidão
         la t2, PTR_INIMIGO_1
@@ -3604,7 +3616,7 @@ LOGICA_CARNEIROS:
     sw s5, 24(sp) # Tempo
 
     call ATUALIZAR_ANIMACAO_CARNEIRO
-    
+
     # 1. Carrega Posição do Player e Tempo
     la t0, SAMARA_POS
     lh s3, 0(t0)
@@ -3624,6 +3636,28 @@ LOGICA_CARNEIROS:
         lw t0, 8(s0)     # Ativo?
         beqz t0, PROXIMO_CARNEIRO_WALK
 
+# === LÓGICA DE SLOW (NOVO) ===
+        lw t6, 12(s0)          # Lê a word de controle (Direção + Slow)
+        srli a4, t6, 16        # Pega a parte alta (Timer do Slow)
+        beqz a4, MOVIMENTO_NORMAL_SHEEP # Se for 0, vida normal
+        
+        # Se tem slow:
+        addi a4, a4, -1        # Decrementa timer
+        slli a4, a4, 16        # Move de volta pro topo
+        li a5, 0x0000FFFF      # Máscara
+        and t6, t6, a5         # Pega só a direção original
+        or t6, t6, a4          # Junta novo timer
+        sw t6, 12(s0)          # Salva
+        
+        # EFEITO DE LENTIDÃO: Só anda frame sim, frame não (50% speed)
+        andi a4, s5, 1         # Usa o tempo global (s5) par/impar
+        bnez a4, PROXIMO_CARNEIRO_WALK # Se ímpar, PULA O MOVIMENTO (congela)
+
+        MOVIMENTO_NORMAL_SHEEP:
+        # ==============================
+
+        lw t1, 0(s0)     # Sheep X
+        lw t2, 4(s0)     # Sheep Y
         lw t1, 0(s0)     # Sheep X
         lw t2, 4(s0)     # Sheep Y
         
@@ -3652,26 +3686,31 @@ LOGICA_CARNEIROS:
         # X
         beq s3, t1, FOGE_CONT_Y_W
         blt s3, t1, FOGE_DIR_CW
-        addi t1, t1, -1    # Foge Esq
+        addi t1, t1, -4    # Foge Esq
         j FOGE_CONT_Y_W
         FOGE_DIR_CW:
-        addi t1, t1, 1     # Foge Dir
+        addi t1, t1, 4     # Foge Dir
 
         FOGE_CONT_Y_W:
         blt s4, t2, FOGE_BAIXO_CW
-        addi t2, t2, -1    # Foge Cima
+        addi t2, t2, -4    # Foge Cima
         j CHECK_REPULSAO_W
         FOGE_BAIXO_CW:
-        addi t2, t2, 1     # Foge Baixo
+        addi t2, t2, 4     # Foge Baixo
         j CHECK_REPULSAO_W
 
-        # === MODO PASSEIO (CAMINHADA LONGA) ===
+# === MODO PASSEIO (CAMINHADA LONGA) ===
         MODO_PASSEIO_REAL:
         
         # Usa o offset 12 da struct como "Direção Atual"
         # Se 12(s0) == 0, precisa escolher nova direção
-        lw t6, 12(s0)   # Lê direção salva (0=Null, 1=Dir, 2=Esq, 3=Baixo, 4=Cima)
+        lw t6, 12(s0)   # Lê [TIMER | DIREÇÃO]
         
+        # >>>>> ADICIONE ESTAS DUAS LINHAS AQUI <<<<<
+        slli t6, t6, 16  # Empurra pra esquerda (apaga o timer)
+        srli t6, t6, 16  # Traz de volta (agora t6 tem só a direção pura)
+        # ============================================
+
         # A cada ~60 frames (1 seg), força troca de direção
         andi t5, s5, 63  # Pega últimos 6 bits do tempo
         bnez t5, MANTER_DIRECAO
