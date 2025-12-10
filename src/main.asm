@@ -39,6 +39,19 @@ SAMARA_POS:   .half 160,120   # Posição atual X, Y
 SAMARA_F0:    .half 160,120   # Posição no Frame 0 (pra limpar rastro)
 SAMARA_F1:    .half 160,120   # Posição no Frame 1 (pra limpar rastro)
 
+
+# ============ INVENTÁRIO (STATUS) ============
+HAS_SPEED_UP: .word 0   # 0 = Não tem, 1 = Comprou Velocidade
+HAS_PET_UP:   .word 0   # 0 = Não tem, 1 = Comprou Ração/Upgrade
+
+# Sprite temporário da Ração (Reusa o de Vida se não tiver um próprio)
+# Se você tiver um arquivo "racao.data", mude o include abaixo.
+racao_sprite: 
+    .include "sprites/item_vida.data"
+chave_sprite: 
+    .include "sprites/chave.data" 
+POS_CHAVE:    .half 194, 212  
+
 # ==========================
 # ESTADO DO ATAQUE (MÚLTIPLOS PROJÉTEIS)
 # ==========================
@@ -457,7 +470,6 @@ LOOP_DO_JOGO:
     
     LOGICA_JOGO:
 
-    call TOCAR_MUSICA
     # Verifica o teclado (WASD)
     call VERIFICAR_ENTRADA
     
@@ -661,7 +673,7 @@ IMPRIMIR_TELA_CHEIA:
     ret
 
 #########################################################
-# FUNÇÕES GRÁFICAS (CORRIGIDA: EVITA CRASH NO MAPA 3)
+# FUNÇÕES GRÁFICAS (CORRIGIDA - CHAVE APARECE AGORA)
 #########################################################
 DESENHAR_TUDO:
     addi sp, sp, -4
@@ -669,14 +681,6 @@ DESENHAR_TUDO:
 
     # --- 1. AS PAREDES VÊM PRIMEIRO ---
     call DESENHAR_CENARIO_HITBOX 
-
-    # --- 2. DEPOIS OS ITENS ---
-    la t0, ITEM_VELO
-    lh t1, 4(t0)
-    beqz t1, VERIFICAR_VIDA_DRAW
-    la a0, ITEM_VELO
-    la a3, item_velocidade
-    call DESENHAR_POSICAO
 
     # --- DESENHAR LISTA DE MOEDAS ---
     li t0, 0                 
@@ -707,14 +711,6 @@ DESENHAR_TUDO:
         j LOOP_DRAW_MOEDAS
 
     FIM_DRAW_MOEDA:
-    
-    VERIFICAR_VIDA_DRAW:
-    la t0, ITEM_VIDA
-    lh t1, 4(t0)
-    beqz t1, DESENHAR_ENTIDADES
-    la a0, ITEM_VIDA
-    la a3, item_vida
-    call DESENHAR_POSICAO
 
     DESENHAR_ENTIDADES:
     # --- 3. DEPOIS O JOGADOR ---
@@ -731,19 +727,21 @@ DESENHAR_TUDO:
     call DESENHAR_NOTAS_ATK   
     call DESENHAR_KIT
     
-    # === VERIFICA SE É MAPA 3 (CARNEIROS) ===
+    # === VERIFICA QUAL MAPA É ===
     la t0, MAPA_ATUAL
     lw t0, 0(t0)
     la t1, map_3
-    bne t0, t1, DESENHAR_INIMIGOS_PADRAO # Se não for Mapa 3, desenha normal
+    bne t0, t1, DESENHAR_INIMIGOS_PADRAO # Se não for Mapa 3, vai pro padrão
 
-    # --- DESENHAR APENAS CARNEIROS ---
+    # ==========================================
+    # --- MAPA 3: DESENHAR APENAS CARNEIROS ---
+    # ==========================================
     la t0, SHEEP_ARRAY
     li t1, 0
     li t2, MAX_SHEEP
     
     LOOP_DRAW_SHEEP:
-        beq t1, t2, FIM_DESENHAR_TUDO_SAFE
+        beq t1, t2, FIM_DESENHO_INIMIGOS # Acabou carneiros, vai pro fim comum
         lw t3, 8(t0)     
         beqz t3, NEXT_DRAW_S
         
@@ -755,11 +753,8 @@ DESENHAR_TUDO:
         lw a1, 0(t0)    # X
         lw a2, 4(t0)    # Y
         
-        # --- ALTERAÇÃO AQUI ---
-        # Em vez de: la a0, sheep_sprite
         la t4, SHEEP_FRAME_PTR
         lw a0, 0(t4)    # Carrega o frame atual da animação
-        # ----------------------
         
         mv a3, s0       
         call IMPRIMIR
@@ -773,8 +768,10 @@ DESENHAR_TUDO:
         addi t0, t0, 16
         addi t1, t1, 1
         j LOOP_DRAW_SHEEP
-
-    # --- 4. INIMIGOS PADRÃO (MAPA 1 E 2) ---
+    
+    # ==========================================
+    # --- MAPA 1 E 2: INIMIGOS PADRÃO ---
+    # ==========================================
     DESENHAR_INIMIGOS_PADRAO:
     
     # Slot 1: Verifica se é Mapa 1 (Bispo) ou Mapa 2 (Dama)
@@ -809,8 +806,29 @@ DESENHAR_TUDO:
     lw a0, 0(t0)        
     la a3, cavalo       
     call DESENHAR_POSICAO
+
+    # ==========================================
+    # --- PONTO COMUM: DESENHAR A CHAVE ---
+    # ==========================================
+    FIM_DESENHO_INIMIGOS:
     
-    FIM_DESENHAR_TUDO_SAFE:
+    # Salva RA pq vamos chamar outra função
+    addi sp, sp, -4
+    sw ra, 0(sp)
+    
+    call VERIFICAR_TODOS_MORTOS
+    beqz a0, SKIP_DRAW_KEY  # Se tem gente viva, pula
+    
+    # Desenha a Chave se todos morreram
+    la a0, POS_CHAVE
+    la a3, chave_sprite
+    call DESENHAR_POSICAO
+    
+    SKIP_DRAW_KEY:
+    lw ra, 0(sp)
+    addi sp, sp, 4
+
+    # --- FIM REAL DA FUNÇÃO ---
     lw ra, 0(sp)
     addi sp, sp, 4
     ret
@@ -1354,33 +1372,84 @@ DESENHAR_NUMERO:
     ret
 
 # =========================================================
-# HUD / BARRA DE STATUS (ATUALIZADA)
+# DESENHAR_INVENTARIO
+# Exibe ícones dos upgrades comprados na parte inferior
+# =========================================================
+DESENHAR_INVENTARIO:
+    addi sp, sp, -4
+    sw ra, 0(sp)
+
+    # Posição base dos ícones (Ao lado das moedas)
+    # Moedas estão em X=35. Vamos colocar itens a partir do X=100
+    
+    # 1. ÍCONE DE VELOCIDADE (Bota Azul)
+    la t0, HAS_SPEED_UP
+    lw t1, 0(t0)
+    beqz t1, CHECK_PET_ICON  # Se não tem, pula
+    
+    la a0, item_velocidade   # Sprite da bota
+    li a1, 225               # Posição X
+    li a2, 212            # Posição Y (HUD)
+    mv a3, s0                # Frame
+    call IMPRIMIR
+    
+    CHECK_PET_ICON:
+    # 2. ÍCONE DE RAÇÃO/PET (Item Amarelo ou Ração)
+    la t0, HAS_PET_UP
+    lw t1, 0(t0)
+    beqz t1, FIM_INVENTARIO
+    
+    la a0, racao_sprite      # Sprite da ração
+    li a1, 245               # Posição X (100 + 25 de espaço)
+    li a2, 212               # Posição Y
+    mv a3, s0
+    call IMPRIMIR
+    
+    FIM_INVENTARIO:
+    lw ra, 0(sp)
+    addi sp, sp, 4
+    ret
+# =========================================================
+# HUD / BARRA DE STATUS (CONFIGURÁVEL)
 # =========================================================
 DESENHAR_VIDAS:
     addi sp, sp, -4
     sw ra, 0(sp)
     
-    # --- 1. Apaga/Desenha Corações ---
-    la a0, tile_in
-    li a1, 10
-    li a2, 10
+    # --- CONFIGURAÇÃO DE POSIÇÃO ---
+    .eqv HEART_START_X  22    # Posição X inicial
+    .eqv HEART_START_Y  210   # Posição Y (Altura)
+    .eqv HEART_SPACING  10   # Distância entre corações
+    
+    # --- 1. Desenha os "Slots" vazios (Fundo cinza) ---
+    la a0, tile_in   # Sprite do slot vazio (ou hud_coracao vazio)
     mv a3, s0
-    call IMPRIMIR
-    li a1, 28
-    li a2, 10
-    mv a3, s0
-    call IMPRIMIR
-    li a1, 46
-    li a2, 10
-    mv a3, s0
+    
+    # Coração 1 (Fundo)
+    li a1, HEART_START_X
+    li a2, HEART_START_Y
     call IMPRIMIR
     
-    # Desenha quantos corações restam
+    # Coração 2 (Fundo)
+    li a1, HEART_START_X
+    addi a1, a1, HEART_SPACING  # Soma espaçamento
+    li a2, HEART_START_Y
+    call IMPRIMIR
+    
+    # Coração 3 (Fundo)
+    li a1, HEART_START_X
+    li t0, HEART_SPACING
+    add a1, a1, t0
+    add a1, a1, t0              # Soma espaçamento 2x
+    li a2, HEART_START_Y
+    call IMPRIMIR
+    
+    # --- 2. Desenha os Corações Cheios (Baseado na Vida) ---
     la t0, VIDAS
-    lw t0, 0(t0)
-    li a1, 30
-    li a2, 208
-    mv a3, s0
+    lw t0, 0(t0)      # Quantas vidas tem?
+    
+    li a1, HEART_START_X
+    li a2, HEART_START_Y
     la a0, hud_coracao
     
     LOOP_VIDAS:
@@ -1398,28 +1467,28 @@ DESENHAR_VIDAS:
         lw t0, 8(sp)
         addi sp, sp, 12
         
-        addi a1, a1, 18
+        addi a1, a1, HEART_SPACING  # <--- ESPAÇAMENTO AQUI
         addi t0, t0, -1
         j LOOP_VIDAS
 
     FIM_DESENHAR_VIDAS:
     
     # --- 2. PLACAR DE MOEDAS (ESQUERDA) ---
-    # Ícone da moeda
-    li a1, 63         
-    li a2, 223          
-    mv a3, s0
-    la a0, coin_sprite 
-    call IMPRIMIR
+    # # Ícone da moeda
+    # li a1, 63         
+    # li a2, 223          
+    # mv a3, s0
+    # la a0, coin_sprite 
+    # call IMPRIMIR
 
     # Número de moedas
     la t0, MOEDAS
     lw a0, 0(t0)       
-    li a1, 52         
-    li a2, 225          
+    li a1, 35         
+    li a2, 218          
     mv a3, s0          
     call DESENHAR_NUMERO
-
+    call DESENHAR_INVENTARIO
     # --- 3. PLACAR DE CARNEIROS (DIREITA - FASE) ---
     # Verifica se estamos no Mapa 3 para desenhar o contador
     la t0, MAPA_ATUAL
@@ -1778,16 +1847,16 @@ VERIFICAR_COLISOES:
     sw s1, 4(sp)
     sw s2, 8(sp)
 
-    # --- Checa Itens ---
-    la a0, SAMARA_POS
-    la a1, ITEM_VELO
-    call VERIFICAR_COLISAO_CAIXA
-    bnez a0, PEGAR_ITEM_VELOCIDADE
+    # # --- Checa Itens ---
+    # la a0, SAMARA_POS
+    # la a1, ITEM_VELO
+    # call VERIFICAR_COLISAO_CAIXA
+    # bnez a0, PEGAR_ITEM_VELOCIDADE
     
-    la a0, SAMARA_POS
-    la a1, ITEM_VIDA
-    call VERIFICAR_COLISAO_CAIXA
-    bnez a0, PEGAR_ITEM_VIDA
+    # la a0, SAMARA_POS
+    # la a1, ITEM_VIDA
+    # call VERIFICAR_COLISAO_CAIXA
+    # bnez a0, PEGAR_ITEM_VIDA
     
     j CHECK_MOEDAS_LOOP  
 
@@ -1988,31 +2057,46 @@ LIMPAR_FUNDO_ITEM:
     ret
 
 # =========================================================
-# Lógica AABB (Axis-Aligned Bounding Box) - 32x32 COMPATÍVEL
+# Lógica AABB (Axis-Aligned Bounding Box) - CORRIGIDA
+# Agora usa tamanhos diferentes para Samara (16px) e Inimigos (32px)
 # =========================================================
 VERIFICAR_COLISAO_CAIXA:
-    lh t0, 0(a0)  # X1 (Objeto 1 - Ex: Samara)
-    lh t1, 2(a0)  # Y1 (Objeto 1)
-    lh t2, 0(a1)  # X2 (Objeto 2 - Ex: Inimigo 32x32)
-    lh t3, 2(a1)  # Y2 (Objeto 2)
+    lh t0, 0(a0)  # X1 (Samara / Objeto 1)
+    lh t1, 2(a0)  # Y1 (Samara / Objeto 1)
+    lh t2, 0(a1)  # X2 (Inimigo / Item / Objeto 2)
+    lh t3, 2(a1)  # Y2 (Inimigo / Item / Objeto 2)
     
-    # --- TAMANHO DA HITBOX ---
-    # Se o sprite é 32x32, usamos ~26 ou 28 para dar uma folga
-    li t4, 26      
+    # --- DEFINIÇÃO DOS TAMANHOS ---
+    # t4 = Tamanho da SAMARA (a0). 
+    # Ela tem 16px. Usamos 12 ou 14 para ficar "justo" e não morrer pelo ar.
+    li t4, 12      
     
-    # Verifica sobreposição X
-    add t5, t2, t4      # X2 + Largura
-    bge t0, t5, SEM_COLISAO # Se X1 >= (X2 + Largura), tá à direita
+    # t6 = Tamanho do ALVO (a1 - Inimigo/Item).
+    # Inimigos tem 32px (usamos 24 de hitbox).
+    # Itens tem 16px (usar 24 deixa mais fácil de pegar, o que é bom).
+    li t6, 24      
     
-    add t5, t0, t4      # X1 + Largura
-    ble t5, t2, SEM_COLISAO # Se (X1 + Largura) <= X2, tá à esquerda
+    # --- EIXO X ---
+    # Verifica se Samara está à DIREITA do Inimigo
+    # X_Samara >= X_Inimigo + Largura_Inimigo
+    add t5, t2, t6      
+    bge t0, t5, SEM_COLISAO 
     
-    # Verifica sobreposição Y
-    add t5, t3, t4      # Y2 + Altura
-    bge t1, t5, SEM_COLISAO # Se Y1 >= (Y2 + Altura), tá abaixo
+    # Verifica se Samara está à ESQUERDA do Inimigo
+    # X_Samara + Largura_Samara <= X_Inimigo
+    add t5, t0, t4      
+    ble t5, t2, SEM_COLISAO 
     
-    add t5, t1, t4      # Y1 + Altura
-    ble t5, t3, SEM_COLISAO # Se (Y1 + Altura) <= Y2, tá acima
+    # --- EIXO Y ---
+    # Verifica se Samara está ABAIXO do Inimigo
+    # Y_Samara >= Y_Inimigo + Altura_Inimigo
+    add t5, t3, t6      
+    bge t1, t5, SEM_COLISAO 
+    
+    # Verifica se Samara está ACIMA do Inimigo
+    # Y_Samara + Altura_Samara <= Y_Inimigo
+    add t5, t1, t4      
+    ble t5, t3, SEM_COLISAO 
     
     li a0, 1      # Bateu!
     ret
@@ -2057,7 +2141,7 @@ CHECAR_COLISAO_MAPA:
 
 # =========================================================
 # VERIFICAR ENTRADA (MOVIMENTO + DIREÇÃO + ATAQUE + LOJA)
-# COM NOVA LÓGICA DE ANIMAÇÃO DINÂMICA
+# COM BLOQUEIO DE PORTA SE INIMIGOS ESTIVEREM VIVOS
 # =========================================================
 VERIFICAR_ENTRADA:
     # 1. Salvar RA na pilha
@@ -2141,10 +2225,27 @@ VERIFICAR_ENTRADA:
         lw t0, 0(sp)
         addi sp, sp, 16
 
-        # === DETECÇÃO DA PORTA (3) ===
+        # === DETECÇÃO DA PORTA (3) COM BLOQUEIO ===
         li t4, 3
-        beq t5, t4, MUDAR_PARA_MAPA_2
+        bne t5, t4, CHECK_LOJA_W  # Se não é porta, verifica loja
 
+        # Se for porta, verifica se matou todo mundo
+        addi sp, sp, -4
+        sw t5, 0(sp)
+        
+        call VERIFICAR_TODOS_MORTOS
+        mv t6, a0
+        
+        lw t5, 0(sp)
+        addi sp, sp, 4
+        
+        # Se t6 = 1 (todos mortos), entra.
+        bnez t6, MUDAR_PARA_MAPA_2
+        
+        # Se não matou todos, trata como parede (t5 vira 1 e bloqueia)
+        li t5, 1  
+        
+        CHECK_LOJA_W:
         # === DETECÇÃO DA LOJA (4) ===
         li t4, 4
         beq t5, t4, TENTAR_ABRIR_LOJA
@@ -2214,10 +2315,21 @@ VERIFICAR_ENTRADA:
         lw t0, 0(sp)
         addi sp, sp, 16
 
-        # === DETECÇÃO DA PORTA (3) ===
+        # === DETECÇÃO DA PORTA (3) COM BLOQUEIO ===
         li t4, 3
-        beq t5, t4, MUDAR_PARA_MAPA_2
+        bne t5, t4, CHECK_LOJA_S
 
+        addi sp, sp, -4
+        sw t5, 0(sp)
+        call VERIFICAR_TODOS_MORTOS
+        mv t6, a0
+        lw t5, 0(sp)
+        addi sp, sp, 4
+        
+        bnez t6, MUDAR_PARA_MAPA_2
+        li t5, 1  # Bloqueia
+        
+        CHECK_LOJA_S:
         # === DETECÇÃO DA LOJA (4) ===
         li t4, 4
         beq t5, t4, TENTAR_ABRIR_LOJA
@@ -2284,10 +2396,21 @@ VERIFICAR_ENTRADA:
         lw t0, 0(sp)
         addi sp, sp, 16
 
-        # === DETECÇÃO DA PORTA (3) ===
+        # === DETECÇÃO DA PORTA (3) COM BLOQUEIO ===
         li t4, 3
-        beq t5, t4, MUDAR_PARA_MAPA_2
+        bne t5, t4, CHECK_LOJA_A
 
+        addi sp, sp, -4
+        sw t5, 0(sp)
+        call VERIFICAR_TODOS_MORTOS
+        mv t6, a0
+        lw t5, 0(sp)
+        addi sp, sp, 4
+        
+        bnez t6, MUDAR_PARA_MAPA_2
+        li t5, 1  # Bloqueia
+        
+        CHECK_LOJA_A:
         # === DETECÇÃO DA LOJA (4) ===
         li t4, 4
         beq t5, t4, TENTAR_ABRIR_LOJA
@@ -2356,10 +2479,21 @@ VERIFICAR_ENTRADA:
         lw t0, 0(sp)
         addi sp, sp, 16
 
-        # === DETECÇÃO DA PORTA (3) ===
+        # === DETECÇÃO DA PORTA (3) COM BLOQUEIO ===
         li t4, 3
-        beq t5, t4, MUDAR_PARA_MAPA_2
+        bne t5, t4, CHECK_LOJA_D
 
+        addi sp, sp, -4
+        sw t5, 0(sp)
+        call VERIFICAR_TODOS_MORTOS
+        mv t6, a0
+        lw t5, 0(sp)
+        addi sp, sp, 4
+        
+        bnez t6, MUDAR_PARA_MAPA_2
+        li t5, 1  # Bloqueia
+        
+        CHECK_LOJA_D:
         # === DETECÇÃO DA LOJA (4) ===
         li t4, 4
         beq t5, t4, TENTAR_ABRIR_LOJA
@@ -2613,6 +2747,17 @@ MUDAR_PARA_MAPA_2:
     li t1, 32
     sh t1, 0(t0)
     sh t1, 2(t0)
+    la t0, KIT_POS
+    li t1, 22         # Mesma posição da Samara (ou perto)
+    sh t1, 0(t0)      # Kit X = 32
+    sh t1, 2(t0)      # Kit Y = 32
+    
+    # Reseta o estado do gato (Pra ele não tentar buscar moedas do mapa anterior)
+    la t0, KIT_STATE
+    sw zero, 0(t0)    # Estado 0 = Seguir Samara
+    la t0, KIT_TARGET_PTR
+    sw zero, 0(t0)    # Limpa alvo antigo
+    # ==========================================
 
     call TOCAR_SOM_COLETA
     j RETORNAR_ENTRADA
@@ -4246,42 +4391,51 @@ VERIFICAR_INPUT_LOJA:
 
     COMPRAR_VELOCIDADE:
         call VERIFICAR_SALDO
-        beqz a0, FIM_INPUT_LOJA  # Sem dinheiro
+        beqz a0, FIM_INPUT_LOJA
 
         # Efeito: Aumenta velocidade
         la t0, VELO_SAMARA
-        li t1, 6             # Define velocidade 6 (Normal é 4)
+        li t1, 6
         sw t1, 0(t0)
         
+        # --- ATUALIZAÇÃO DO ÍCONE ---
+        la t0, HAS_SPEED_UP
+        li t1, 1
+        sw t1, 0(t0)
+        # ----------------------------
+        
         call DESCONTAR_MOEDA
-        call TOCAR_SOM_COLETA # Feedback sonoro
         j FIM_INPUT_LOJA
 
     COMPRAR_VIDA:
+        # Vida é consumível (corações), não precisa de ícone permanente
+        # a menos que você queira. O código original apenas cura.
         call VERIFICAR_SALDO
         beqz a0, FIM_INPUT_LOJA
 
-        # Efeito: +1 Vida
         la t0, VIDAS
         lw t1, 0(t0)
         addi t1, t1, 1
         sw t1, 0(t0)
 
         call DESCONTAR_MOEDA
-        call TOCAR_SOM_COLETA
         j FIM_INPUT_LOJA
 
     COMPRAR_PET_UP:
         call VERIFICAR_SALDO
         beqz a0, FIM_INPUT_LOJA
 
-        # Efeito: Aumenta velocidade do Pet
         la t0, KIT_SPEED
-        li t1, 4             # Dobra a velocidade (Normal era 2)
+        li t1, 4
         sw t1, 0(t0)
 
+        # --- ATUALIZAÇÃO DO ÍCONE ---
+        la t0, HAS_PET_UP
+        li t1, 1
+        sw t1, 0(t0)
+        # ----------------------------
+
         call DESCONTAR_MOEDA
-        call TOCAR_SOM_MIADO # Feedback do gato
         j FIM_INPUT_LOJA
 
     FIM_INPUT_LOJA:
@@ -4305,6 +4459,33 @@ DESCONTAR_MOEDA:
     lw t1, 0(t0)
     addi t1, t1, -1
     sw t1, 0(t0)
+    ret
+# Retorna a0 = 1 se todos mortos, a0 = 0 se alguém vivo
+VERIFICAR_TODOS_MORTOS:
+    # Inimigo 1
+    la t0, PTR_INIMIGO_1
+    lw t0, 0(t0)
+    lh t1, 0(t0)     # Pega X
+    li t2, 350       # Se X > 350, está morto/fora da tela
+    blt t1, t2, TEM_VIVO
+    
+    # Inimigo 2
+    la t0, PTR_INIMIGO_2
+    lw t0, 0(t0)
+    lh t1, 0(t0)
+    blt t1, t2, TEM_VIVO
+    
+    # Inimigo 3
+    la t0, PTR_INIMIGO_3
+    lw t0, 0(t0)
+    lh t1, 0(t0)
+    blt t1, t2, TEM_VIVO
+    
+    li a0, 1  # Todos mortos
+    ret
+    
+    TEM_VIVO:
+    li a0, 0
     ret
 
 # INCLUDES
