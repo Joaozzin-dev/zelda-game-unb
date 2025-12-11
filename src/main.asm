@@ -41,27 +41,68 @@ menu_sprites_end:
 MENU_PTR: 
     .word menu_sprites   # Aponta para o frame atual do menu
 
-# ============ HISTÓRIA (LISTA DE ARQUIVOS) ============
-# Precisamos carregar todos e criar uma lista de endereços
-# Vou colocar alguns exemplos baseados na sua imagem:
 
+# ============ ARQUIVOS DA HISTÓRIA (TODOS) ============
+# Intro
 hist_01: 
     .include "sprites/historia_1.0.s"
 hist_02: 
     .include "sprites/historia_1.1.s"
-hist_03: 
+
+# Meio / Final
+hist_03:
     .include "sprites/historia_2.0.s"
 hist_04: 
-    .include "sprites/historia_2.2.s"
+    .include "sprites/historia2.1.s"  # (Estava no fim da lista)
 hist_05: 
-    .include "sprites/historia_2.3.s"
+    .include "sprites/historia_2.2.s"
 hist_06: 
+    .include "sprites/historia_2.3.s"
+hist_07: 
     .include "sprites/historia_3.0.s"
+hist_08: 
+    .include "sprites/historia_3.1.s"
+hist_09: 
+    .include "sprites/historia_3.2.s"
+hist_10: 
+    .include "sprites/historia_3.3.s"
+hist_11: 
+    .include "sprites/historia_3.4.s"
+hist_12: 
+    .include "sprites/historia_3.5.s"
+hist_13: 
+    .include "sprites/historia_3.7.s"
+hist_14: 
+    .include "sprites/historia_4.0.s"
 
-# ARRAY DE PONTEIROS (A ordem que vai aparecer na tela)
+# ============ ARRAYS DE SEQUÊNCIA ============
+
+# 1. SEQUÊNCIA DE ABERTURA (Antes do Jogo)
 STORY_ARRAY:
-    .word hist_01, hist_02, hist_03, hist_04, hist_05, hist_06
-    .word 0  # <--- ZERO INDICA O FIM DA HISTÓRIA (IMPORTANTE)
+    .word hist_01, hist_02, hist_03, hist_04, hist_05, hist_06, hist_07, hist_08, hist_09, hist_10, hist_11, hist_12, hist_13, hist_14
+    .word 0  # Fim do Jogo
+
+# ============ DIÁLOGO PÓS-MORTE (BAD ENDING) ============
+# Sprites baseados na sua imagem
+bad_01: 
+    .include "sprites/1.0.s"
+bad_02: 
+    .include "sprites/2.0.s"
+bad_03: 
+    .include "sprites/3.0.s"
+bad_04: 
+    .include "sprites/4.0.s"
+bad_05:
+    .include "sprites/5.0.s"
+bad_06: 
+    .include "sprites/6.0.s"
+
+# Array de ponteiros para o diálogo final
+BAD_ENDING_ARRAY:
+    .word bad_01, bad_02, bad_03, bad_04, bad_05, bad_06
+    .word 0  # <--- FIM DA LISTA
+
+BAD_ENDING_INDEX: .word 0   # Qual slide estamos
 
 # Timer para inimigos (Independente)
 TEMP_RIVAL:  .word 0            # Cronômetro interno dos bichos
@@ -481,6 +522,11 @@ CONFIGURACAO_INICIAL:
     la t1, char           # Carrega o endereço do início do arquivo de sprite
     sw t1, 0(t0)          # Salva na variável para começar do frame 0
 
+    # ============ RESET DA MÚSICA ============
+    la t0, music_state
+    sw zero, 0(t0)      # Índice = 0
+    sw zero, 4(t0)      # Timestamp = 0 (Força reset na função)
+    
     # --- Zera o timer dos inimigos ---
     la t0, TEMP_RIVAL
     sw zero, 0(t0)
@@ -509,7 +555,72 @@ LIMPAR_TELA_TOTAL:
     li a2, 0              # Y = 0
     mv a3, s0             # Frame atual (0 ou 1)
     j IMPRIMIR_TELA_CHEIA
+# =========================================================
+# PROCESSAR_BAD_ENDING
+# Mostra slides sequenciais após a morte ao apertar ESPAÇO
+# =========================================================
+PROCESSAR_BAD_ENDING:
+    addi sp, sp, -4
+    sw ra, 0(sp)
 
+    # 1. CARREGA SLIDE ATUAL
+    la t0, BAD_ENDING_ARRAY # Base do vetor
+    la t1, BAD_ENDING_INDEX
+    lw t2, 0(t1)            # Índice atual
+    slli t2, t2, 2          # Índice * 4
+    add t0, t0, t2          # Endereço do ponteiro
+    
+    lw a0, 0(t0)            # Carrega endereço da imagem
+    
+    # Se a0 for 0, acabou o diálogo -> Reinicia o jogo ou sai
+    beqz a0, FIM_BAD_ENDING
+    
+    # 2. DESENHA SLIDE (Nos dois frames para evitar flicker se estiver em loop)
+    # Nota: Como estamos num loop dedicado abaixo, podemos desenhar no s0 atual
+    mv a3, s0
+    call IMPRIMIR_TELA_CHEIA
+
+    # 3. VERIFICA TECLA (SPACE) PARA AVANÇAR
+    li t1, 0xFF200000
+    lw t0, 0(t1)
+    andi t0, t0, 1
+    
+    # Lógica de Debounce (igual da história)
+    la t3, KEY_DEBOUNCE
+    lw t4, 0(t3)
+    
+    beqz t0, SOLTOU_KEY_BAD
+    
+    # Tem tecla pressionada
+    bnez t4, RET_BAD_PROC # Se debounce ativo, ignora
+    
+    lw t2, 4(t1)          # Pega tecla
+    li t0, 32             # SPACE
+    bne t2, t0, RET_BAD_PROC
+
+    # --- AVANÇA SLIDE ---
+    la t1, BAD_ENDING_INDEX
+    lw t2, 0(t1)
+    addi t2, t2, 1
+    sw t2, 0(t1)
+    
+    # Ativa debounce
+    li t4, 1
+    sw t4, 0(t3)
+    j RET_BAD_PROC
+
+    SOLTOU_KEY_BAD:
+    sw zero, 0(t3)        # Zera debounce
+    j RET_BAD_PROC
+
+    FIM_BAD_ENDING:
+    # Quando acabar os slides, reinicia o jogo
+    j CONFIGURACAO_INICIAL
+
+    RET_BAD_PROC:
+    lw ra, 0(sp)
+    addi sp, sp, 4
+    ret
 LOOP_DO_JOGO:
     # --- Controle de FPS (Trava em 60) ---
     li a7, 30         
@@ -523,7 +634,7 @@ LOOP_DO_JOGO:
     
     # --- 1. LIMPEZA DO FRAME ATUAL ---
     call LIMPAR_TELA_TOTAL
-
+    call TOCAR_MUSICA
     # ==========================================
     # >>>>> MÁQUINA DE ESTADOS (NOVO) <<<<<
     # Verifica em qual tela estamos:
@@ -585,7 +696,7 @@ LOOP_DO_JOGO:
         j TROCA_FRAME
     
     LOGICA_JOGO:
-
+    
     # Verifica o teclado (WASD)
     call VERIFICAR_ENTRADA
     
@@ -699,7 +810,11 @@ INICIO_MORTE_GAUNTLET:
     j FIM_DE_JOGO_TELA
 
 FIM_DE_JOGO_TELA:
-    # Desenha a tela de derrota nos dois frames pra garantir
+    # 1. Reseta o índice do bad ending para garantir que comece do 1.0.s
+    la t0, BAD_ENDING_INDEX
+    sw zero, 0(t0)
+
+    # 2. Desenha a tela de GAME OVER (Estática)
     li s0, 0
     la a0, Game_Over_Menu
     call IMPRIMIR_TELA_CHEIA
@@ -707,19 +822,47 @@ FIM_DE_JOGO_TELA:
     la a0, Game_Over_Menu
     call IMPRIMIR_TELA_CHEIA
 
-    AGUARDAR_ENTRADA:
-        li t1, 0xFF200000  # Endereço do teclado
-        lw t0, 0(t1)       # Verifica se tem tecla
+    # 3. Loop aguardando ESPAÇO para começar o diálogo
+    LOOP_WAIT_DIALOGO:
+        li t1, 0xFF200000  
+        lw t0, 0(t1)       
         andi t0, t0, 1
-        beqz t0, AGUARDAR_ENTRADA
-        lw t2, 4(t1)       # Pega a tecla
+        beqz t0, LOOP_WAIT_DIALOGO
+        lw t2, 4(t1)       
         
-        li t0, 'r'
-        beq t2, t0, CONFIGURACAO_INICIAL  # Se apertar 'r', reinicia
+        # Se apertar ESPAÇO (32), vai para o loop do diálogo
+        li t0, 32
+        beq t2, t0, LOOP_DO_BAD_ENDING
+        
+        # Se apertar 'q', sai do jogo
         li t0, 'q'
-        beq t2, t0, FIM_DO_JOGO # Se apertar 'q', sai
-        j AGUARDAR_ENTRADA
+        beq t2, t0, FIM_DO_JOGO
+        
+        # Se apertar 'r', reinicia direto
+        li t0, 'r'
+        beq t2, t0, CONFIGURACAO_INICIAL
+        
+        j LOOP_WAIT_DIALOGO
 
+# --- NOVO LOOP ESPECÍFICO PARA O DIÁLOGO ---
+LOOP_DO_BAD_ENDING:
+    # Controle de FPS básico
+    li a7, 32
+    li a0, 33      # ~30 FPS (para ler com calma)
+    ecall
+
+    call PROCESSAR_BAD_ENDING
+    
+    # Troca Buffer de vídeo
+    li t0, 0xFF200604  
+    sw s0, 0(t0)       
+    xori s0, s0, 1     
+    
+    j LOOP_DO_BAD_ENDING
+
+# =========================================================
+# FIM DO JOGO (SAIR) - ESTE É O RÓTULO QUE FALTAVA
+# =========================================================
 FIM_DO_JOGO:
     li a7, 10
     ecall                  # Encerra o programa
