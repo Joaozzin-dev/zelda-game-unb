@@ -24,6 +24,45 @@ VELO_SAMARA:           .word 4  # Velocidade da boneca (pixels por frame)
 SAMARA_ANIM_CONT:      .word 0  # Contador para não trocar frame rápido demais
 PASSO_TIMER: .word 0 ##isso é pro efeito sonoro apenas 
 
+.data
+
+# ============ CONTROLE DE ESTADOS ============
+GAME_STATE:       .word 0      # 0=Menu, 1=História, 2=Jogo
+MENU_TIMER:       .word 0      # Velocidade da animação do menu
+HISTORIA_INDEX:   .word 0      # Qual slide da história estamos mostrando
+KEY_DEBOUNCE:     .word 0      # Para não pular 10 slides de uma vez
+
+# ============ MENU (3 FRAMES SEQUENCIAIS) ============
+# Substitua pelo nome real do seu arquivo unico de menu
+menu_sprites:
+    .include "sprites/menu.data" 
+menu_sprites_end:
+
+MENU_PTR: 
+    .word menu_sprites   # Aponta para o frame atual do menu
+
+# ============ HISTÓRIA (LISTA DE ARQUIVOS) ============
+# Precisamos carregar todos e criar uma lista de endereços
+# Vou colocar alguns exemplos baseados na sua imagem:
+
+hist_01: 
+    .include "sprites/historia_1.0.data"
+hist_02: 
+    .include "sprites/historia_1.1.data"
+hist_03: 
+    .include "sprites/historia_2.0.data"
+hist_04: 
+    .include "sprites/historia_2.2.data"
+hist_05: 
+    .include "sprites/historia_2.3.data"
+hist_06: 
+    .include "sprites/historia_3.0.data"
+
+# ARRAY DE PONTEIROS (A ordem que vai aparecer na tela)
+STORY_ARRAY:
+    .word hist_01, hist_02, hist_03, hist_04, hist_05, hist_06
+    .word 0  # <--- ZERO INDICA O FIM DA HISTÓRIA (IMPORTANTE)
+
 # Timer para inimigos (Independente)
 TEMP_RIVAL:  .word 0            # Cronômetro interno dos bichos
 LAG_RIVAL:   .word 3            # Os bichos só andam a cada 3 frames (pra não ficarem muito rápidos)
@@ -47,7 +86,7 @@ HAS_PET_UP:   .word 0   # 0 = Não tem, 1 = Comprou Ração/Upgrade
 # Sprite temporário da Ração (Reusa o de Vida se não tiver um próprio)
 # Se você tiver um arquivo "racao.data", mude o include abaixo.
 racao_sprite: 
-    .include "sprites/item_vida.data"
+    .include "sprites/racao_gato.data"
 chave_sprite: 
     .include "sprites/chave.data" 
 POS_CHAVE:    .half 194, 212  
@@ -444,6 +483,42 @@ LOOP_DO_JOGO:
     # --- 1. LIMPEZA DO FRAME ATUAL ---
     call LIMPAR_TELA_TOTAL
 
+    # ==========================================
+    # >>>>> MÁQUINA DE ESTADOS (NOVO) <<<<<
+    # Verifica em qual tela estamos:
+    # 0 = Menu
+    # 1 = História
+    # 2 = Jogo (Com Loja)
+    # ==========================================
+    la t0, GAME_STATE
+    lw t0, 0(t0)
+    
+    # Se for 0, vai pro Menu
+    li t1, 0
+    beq t0, t1, ESTADO_MENU
+    
+    # Se for 1, vai pra História
+    li t1, 1
+    beq t0, t1, ESTADO_HISTORIA
+    
+    # Se for 2, continua para o código do jogo normal (abaixo)
+    j LOGICA_JOGO_REAL
+
+    # --- BLOCO DO MENU ---
+    ESTADO_MENU:
+        call PROCESSAR_MENU    # Desenha menu e checa Espaço
+        j TROCA_FRAME          # Vai direto trocar o buffer
+
+    # --- BLOCO DA HISTÓRIA ---
+    ESTADO_HISTORIA:
+        call PROCESSAR_HISTORIA # Passa slides
+        j TROCA_FRAME
+
+    # ==========================================
+    # >>>>> JOGO REAL (SEU CÓDIGO ANTIGO) <<<<<
+    # ==========================================
+    LOGICA_JOGO_REAL:
+
     # === VERIFICAÇÃO DA LOJA ===
     la t0, LOJA_ABERTA
     lw t1, 0(t0)
@@ -458,7 +533,7 @@ LOOP_DO_JOGO:
         call DESENHAR_TUDO
         call DESENHAR_VIDAS # Inclui o HUD de moedas
         
-        call DESENHAR_FUNDO_VIOLETA
+        call DESENHAR_FUNDO_VIOLETA  # (Ou Fundo Violeta, conforme seu nome atual)
         # 2. Desenha o Overlay da Loja
         call DESENHAR_LOJA_OVERLAY
         
@@ -1372,6 +1447,26 @@ DESENHAR_NUMERO:
     ret
 
 # =========================================================
+# DESENHAR_FLAUTA_HUD
+# Mostra a flauta fixa na barra inferior
+# =========================================================
+DESENHAR_FLAUTA_HUD:
+    addi sp, sp, -4
+    sw ra, 0(sp)
+
+    la a0, flauta_hud_sprite  # O sprite que criamos acima
+    
+    # --- POSIÇÃO NA TELA ---
+    li a1, 150                # X (Ao lado do inventário)
+    li a2, 220                # Y (Mesma altura dos itens)
+    
+    mv a3, s0                 # Frame atual
+    call IMPRIMIR
+
+    lw ra, 0(sp)
+    addi sp, sp, 4
+    ret
+# =========================================================
 # DESENHAR_INVENTARIO
 # Exibe ícones dos upgrades comprados na parte inferior
 # =========================================================
@@ -1489,6 +1584,7 @@ DESENHAR_VIDAS:
     mv a3, s0          
     call DESENHAR_NUMERO
     call DESENHAR_INVENTARIO
+    call DESENHAR_FLAUTA_HUD
     # --- 3. PLACAR DE CARNEIROS (DIREITA - FASE) ---
     # Verifica se estamos no Mapa 3 para desenhar o contador
     la t0, MAPA_ATUAL
@@ -4487,6 +4583,151 @@ VERIFICAR_TODOS_MORTOS:
     TEM_VIVO:
     li a0, 0
     ret
+# =========================================================
+# PROCESSAR_MENU
+# Animação de 3 frames + Detectar Espaço para Iniciar
+# =========================================================
+PROCESSAR_MENU:
+    addi sp, sp, -4
+    sw ra, 0(sp)
+
+    # 1. ATUALIZA ANIMAÇÃO (Loop de 3 frames)
+    la t0, MENU_TIMER
+    lw t1, 0(t0)
+    addi t1, t1, 1
+    li t2, 3              # Velocidade da animação (maior = mais lento)
+    sw t1, 0(t0)
+    blt t1, t2, DRAW_MENU_ATUAL # Ainda não troca
+
+    sw zero, 0(t0)         # Reseta timer
+
+    # Avança ponteiro do menu
+    la t0, MENU_PTR
+    lw t1, 0(t0)           # Endereço atual
+    
+    # Calcula tamanho do frame (W * H + 8)
+    lw t2, 0(t1)           # W
+    lw t3, 4(t1)           # H
+    mul t4, t2, t3         # Pixels
+    addi t4, t4, 8         # Header
+    add t1, t1, t4         # Próximo frame
+    
+    # Verifica se passou do fim (buffer único com 3 frames)
+    la t5, menu_sprites_end
+    bge t1, t5, RESET_MENU_PTR
+    
+    sw t1, 0(t0)           # Salva novo frame
+    j DRAW_MENU_ATUAL
+
+    RESET_MENU_PTR:
+    la t5, menu_sprites
+    sw t5, 0(t0)
+
+    DRAW_MENU_ATUAL:
+    # 2. DESENHA O MENU
+    la t0, MENU_PTR
+    lw a0, 0(t0)
+    mv a3, s0              # Frame buffer
+    
+    # Menu costuma ser tela cheia (320x240), usamos IMPRIMIR_TELA_CHEIA
+    # Se for sprite menor centralizado, use IMPRIMIR normal.
+    call IMPRIMIR_TELA_CHEIA 
+
+    # 3. VERIFICA SPACE PARA INICIAR
+    li t1, 0xFF200000      # Teclado
+    lw t0, 0(t1)
+    andi t0, t0, 1
+    beqz t0, FIM_PROC_MENU
+    lw t2, 4(t1)           # Tecla
+    
+    li t0, 32              # SPACE
+    bne t2, t0, FIM_PROC_MENU
+    
+    # --- MUDANÇA DE ESTADO: MENU -> HISTORIA ---
+    la t0, GAME_STATE
+    li t1, 1
+    sw t1, 0(t0)
+    
+    # Trava o teclado pra não pular a primeira imagem da história sem querer
+    la t0, KEY_DEBOUNCE
+    li t1, 1
+    sw t1, 0(t0)
+
+    FIM_PROC_MENU:
+    lw ra, 0(sp)
+    addi sp, sp, 4
+    ret
+
+# =========================================================
+# PROCESSAR_HISTORIA
+# Mostra slides sequenciais do array STORY_ARRAY
+# =========================================================
+PROCESSAR_HISTORIA:
+    addi sp, sp, -4
+    sw ra, 0(sp)
+
+    # 1. CARREGA SLIDE ATUAL
+    la t0, STORY_ARRAY     # Base do vetor
+    la t1, HISTORIA_INDEX
+    lw t2, 0(t1)           # Índice (0, 1, 2...)
+    slli t2, t2, 2         # Índice * 4 (Palavra)
+    add t0, t0, t2         # Endereço do ponteiro
+    
+    lw a0, 0(t0)           # Carrega endereço da imagem
+    
+    # Se a0 for 0, acabou a história!
+    beqz a0, FIM_DA_HISTORIA
+    
+    # 2. DESENHA SLIDE
+    mv a3, s0
+    call IMPRIMIR_TELA_CHEIA
+
+    # 3. VERIFICA TECLA (SPACE) PARA AVANÇAR
+    li t1, 0xFF200000
+    lw t0, 0(t1)
+    andi t0, t0, 1
+    
+    # Lógica de Debounce (Soltar a tecla antes de apertar de novo)
+    la t3, KEY_DEBOUNCE
+    lw t4, 0(t3)
+    
+    beqz t0, SOLTOU_TECLA  # Se não tem tecla, reseta debounce
+    
+    # Tem tecla pressionada
+    bnez t4, FIM_PROC_HIST # Se debounce ativo, ignora
+    
+    lw t2, 4(t1)           # Pega tecla
+    li t0, 32              # SPACE
+    bne t2, t0, FIM_PROC_HIST
+
+    # --- AVANÇA SLIDE ---
+    la t1, HISTORIA_INDEX
+    lw t2, 0(t1)
+    addi t2, t2, 1
+    sw t2, 0(t1)
+    
+    # Ativa debounce
+    li t4, 1
+    sw t4, 0(t3)
+    j FIM_PROC_HIST
+
+    SOLTOU_TECLA:
+    sw zero, 0(t3)         # Zera debounce
+    j FIM_PROC_HIST
+
+    FIM_DA_HISTORIA:
+    # --- MUDANÇA DE ESTADO: HISTORIA -> JOGO ---
+    la t0, GAME_STATE
+    li t1, 2               # Vai pro jogo
+    sw t1, 0(t0)
+    
+    # Toca música do jogo se necessário
+    # call INICIAR_MUSICA_JOGO
+
+    FIM_PROC_HIST:
+    lw ra, 0(sp)
+    addi sp, sp, 4
+    ret
 
 # INCLUDES
 .include "sounds/music.s"
@@ -4512,3 +4753,5 @@ dama_sprite:
 
 win_sprite:  
     .include "sprites/win.data"
+ .include "sprites/flauta_hud_sprite.data"
+
