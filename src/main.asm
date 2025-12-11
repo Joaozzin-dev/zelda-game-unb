@@ -46,17 +46,17 @@ MENU_PTR:
 # Vou colocar alguns exemplos baseados na sua imagem:
 
 hist_01: 
-    .include "sprites/historia_1.0.data"
+    .include "sprites/historia_1.0.s"
 hist_02: 
-    .include "sprites/historia_1.1.data"
+    .include "sprites/historia_1.1.s"
 hist_03: 
-    .include "sprites/historia_2.0.data"
+    .include "sprites/historia_2.0.s"
 hist_04: 
-    .include "sprites/historia_2.2.data"
+    .include "sprites/historia_2.2.s"
 hist_05: 
-    .include "sprites/historia_2.3.data"
+    .include "sprites/historia_2.3.s"
 hist_06: 
-    .include "sprites/historia_3.0.data"
+    .include "sprites/historia_3.0.s"
 
 # ARRAY DE PONTEIROS (A ordem que vai aparecer na tela)
 STORY_ARRAY:
