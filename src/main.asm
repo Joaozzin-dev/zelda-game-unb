@@ -91,6 +91,8 @@ chave_sprite:
     .include "sprites/chave.data" 
 POS_CHAVE:    .half 194, 212  
 
+# ============ TIMER FASE 3 (10 SEGUNDOS) ============
+GAME_TIMER_M3: .word 600   # 10 segundos * 60 FPS = 600 frames
 # ==========================
 # ESTADO DO ATAQUE (MÚLTIPLOS PROJÉTEIS)
 # ==========================
@@ -166,8 +168,8 @@ CAVALO_F0:     .half 80,140
 CAVALO_F1:     .half 80,140
 CAVALO_STATE:  .word 0        # 0 = andando em Y, 1 = andando em X (Máquina de estados)
 CAVALO_CONT:   .word 0        # Contador de passos antes de virar
-CAVALO_X:      .word 4
-CAVALO_Y:      .word 4
+CAVALO_X:      .word 3
+CAVALO_Y:      .word 3
 
 # ==========================
 # DADOS DA DAMA (BOSS MAPA 2)
@@ -256,58 +258,58 @@ MAPA_ATUAL: .word map
 LEVEL_HIT_MAP:
     # --- TOPO (Linhas 0-4): Cartas (Esq) e Dado 1 (Dir) ---
     # Linha 0 (Y=0) - Quase tudo bloqueado no topo
-    .byte 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1
-    # Linha 1 (Y=8)
-    .byte 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1
+    .byte 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1
+    # Linha 1 (Y=8
+    .byte 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1
     # Linha 2 (Y=16)
-    .byte 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4, 0, 1, 1, 1, 1, 1, 1
+    .byte 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1
     # Linha 3 (Y=24)
-    .byte 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1
+    .byte 0, 0, 0, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1
     # Linha 4 (Y=32) - Fim do Dado de cima
-    .byte 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1
+    .byte 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 1, 1, 1, 1
 
     # --- TRANSIÇÃO DAS CARTAS (Linhas 5-8) ---
     # Aqui vamos diminuindo a parede da esquerda drasticamente para fazer a diagonal
     # Linha 5 (Y=40)
-    .byte 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+    .byte 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1
     # Linha 6 (Y=48)
-    .byte 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+    .byte 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 1, 0
     # Linha 7 (Y=56)
-    .byte 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+    .byte 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0
     # Linha 8 (Y=64) - A partir daqui a esquerda (coluna 0) fica livre (0)
-    .byte 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+    .byte 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0
 
     # --- MEIO DO TABULEIRO COM O DADO 2 (Linhas 9-17) ---
     # O Dado 2 aparece na direita. O resto é chão (0).
     # Linha 9 (Y=72) - Começa pontinha do Dado 2 na direita
-    .byte 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1
+    .byte 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
     # Linha 10 (Y=80)
-    .byte 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1
+    .byte 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
     # Linha 11 (Y=88) - Dado 2 ocupa bem a direita
-    .byte 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1
+    .byte 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1
     # Linha 12 (Y=96)
-    .byte 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1
+    .byte 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1
     # Linha 13 (Y=104)
-    .byte 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1
+    .byte 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1
     # Linha 14 (Y=112)
-    .byte 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1
+    .byte 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1
     # Linha 15 (Y=120)
     .byte 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1
     # Linha 16 (Y=128) - Dado 2 começa a sumir
-    .byte 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1
+    .byte 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 1, 1, 1, 1
     # Linha 17 (Y=136) - Dado 2 acabou, só uma pontinha
-    .byte 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1
+    .byte 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 1, 1
 
     # --- ÁREA LIVRE INFERIOR (Linhas 18-25) ---
     # Tabuleiro totalmente livre de obstáculos laterais
-    .byte 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 # 18
-    .byte 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 # 19
+    .byte 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0 # 18
+    .byte 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0 # 19
     .byte 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 # 20
     .byte 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 # 21
-    .byte 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 # 22
-    .byte 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 # 23
-    .byte 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 # 24
-    .byte 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3 # 25
+    .byte 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 # 22
+    .byte 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 3, 0, 0, 0, 0, 0 # 23
+    .byte 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 3, 0, 0, 0, 0, 0 # 24
+    .byte 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 # 25
 
     # --- HUD / BARRA DE STATUS (Linhas 26-29) ---
     # Área preta com "vida", "tesouros". Totalmente bloqueada.
@@ -321,77 +323,116 @@ LEVEL_HIT_MAP:
     .byte 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1
 
 LEVEL_HIT_MAP_2:
-# Mapa 40x30 (1200 bytes) - Arena Aberta
-# Paredes no topo (Linhas 0 e 1)
-.byte 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 
-.byte 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 
-# Arena (Linhas 2 a 27) - Zeros no meio, 1 nas pontas
-.byte 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4, 1, 1, 1, 1 
-.byte 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1 
-.byte 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1 
-.byte 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1 
-.byte 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1 
-.byte 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1 
-.byte 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1 
-.byte 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1 
-.byte 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1 
-.byte 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1 
-.byte 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1 
-.byte 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1 
-.byte 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1 
-.byte 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1 
-.byte 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1 
-.byte 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1 
-.byte 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1 
-.byte 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1 
-.byte 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1 
-.byte 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1 
-.byte 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1 
-.byte 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1 
-.byte 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1 
-.byte 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1 
-.byte 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1 
-.byte 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1 
-# Paredes no fundo (Linhas 28 e 29)
-.byte 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 
-.byte 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1
+    # --- TOPO (Linhas 0-4): Cartas (Esq) e Dado 1 (Dir) ---
+    # Linha 0 (Y=0) - Quase tudo bloqueado no topo
+    .byte 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1
+    # Linha 1 (Y=8
+    .byte 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1
+    # Linha 2 (Y=16)
+    .byte 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1
+    # Linha 3 (Y=24)
+    .byte 0, 0, 0, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4, 0, 0, 1, 1, 1, 1, 1, 1, 1
+    # Linha 4 (Y=32) - Fim do Dado de cima
+    .byte 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4, 0, 1, 0, 1, 0, 1, 1, 1, 1
+
+    # --- TRANSIÇÃO DAS CARTAS (Linhas 5-8) ---
+    # Aqui vamos diminuindo a parede da esquerda drasticamente para fazer a diagonal
+    # Linha 5 (Y=40)
+    .byte 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1
+    # Linha 6 (Y=48)
+    .byte 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 1, 1
+    # Linha 7 (Y=56)
+    .byte 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 1
+    # Linha 8 (Y=64) - A partir daqui a esquerda (coluna 0) fica livre (0)
+    .byte 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1
+
+    # --- MEIO DO TABULEIRO COM O DADO 2 (Linhas 9-17) ---
+    # O Dado 2 aparece na direita. O resto é chão (0).
+    # Linha 9 (Y=72) - Começa pontinha do Dado 2 na direita
+    .byte 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1
+    # Linha 10 (Y=80)
+    .byte 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1
+    # Linha 11 (Y=88) - Dado 2 ocupa bem a direita
+    .byte 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1
+    # Linha 12 (Y=96)
+    .byte 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1
+    # Linha 13 (Y=104)
+    .byte 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1
+    # Linha 14 (Y=112)
+    .byte 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1
+    # Linha 15 (Y=120)
+    .byte 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1
+    # Linha 16 (Y=128) - Dado 2 começa a sumir
+    .byte 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 1, 1, 1, 1
+    # Linha 17 (Y=136) - Dado 2 acabou, só uma pontinha
+    .byte 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 1, 1
+
+    # --- ÁREA LIVRE INFERIOR (Linhas 18-25) ---
+    # Tabuleiro totalmente livre de obstáculos laterais
+    .byte 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 1 # 18
+    .byte 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1 # 19
+    .byte 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1 # 20
+    .byte 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1 # 21
+    .byte 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1 # 22
+    .byte 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1 # 23
+    .byte 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1 # 24
+    .byte 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1 # 25
+
+    # --- HUD / BARRA DE STATUS (Linhas 26-29) ---
+    # Área preta com "vida", "tesouros". Totalmente bloqueada.
+    # Linha 26 (Y=208) - Margem de segurança logo acima das letras
+    .byte 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1
+    # Linha 27 (Y=216)
+    .byte 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1
+    # Linha 28 (Y=224)
+    .byte 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1
+    # Linha 29 (Y=232)
+    .byte 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1
+
 
 
 LEVEL_HIT_MAP_3:
-# Mapa 40x30 (1200 bytes) - Arena Aberta
-# Paredes no topo (Linhas 0 e 1)
-.byte 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 
-.byte 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 
-# Arena (Linhas 2 a 27) - Zeros no meio, 1 nas pontas
-.byte 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4, 1, 1, 1, 1 
-.byte 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1 
-.byte 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1 
-.byte 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1 
-.byte 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1 
-.byte 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1 
-.byte 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1 
-.byte 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1 
-.byte 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1 
-.byte 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1 
-.byte 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1 
-.byte 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1 
-.byte 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1 
-.byte 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1 
-.byte 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1 
-.byte 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1 
-.byte 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1 
-.byte 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1 
-.byte 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1 
-.byte 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1 
-.byte 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1 
-.byte 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1 
-.byte 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1 
-.byte 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1 
-.byte 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1 
-.byte 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1 
-# Paredes no fundo (Linhas 28 e 29)
-.byte 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 
-.byte 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1
+    # Grid de 40 colunas x 30 linhas (cada tile tem 8x8 pixels)
+    # 1 = Parede/Buraco, 0 = Chão Seguro
+
+    # --- LINHAS 0 a 8: CÉU ESCURO / BOSS (BLOQUEADO) ---
+    .byte 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1
+    .byte 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1
+    .byte 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1
+    .byte 1, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1
+    .byte 1, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1
+    .byte 1, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1
+    .byte 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1
+    .byte 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1
+    .byte 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1
+
+    # --- LINHA 9: TOPO DA NUVEM (BORDA) ---
+    .byte 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1
+    .byte 1, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1
+    .byte 1, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1
+    .byte 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1
+
+    # --- LINHAS 13 a 17: ÁREA DOS BURACOS (Colunas ~8-12 e ~28-32) ---
+    # Aqui inserimos os "1" onde tem buraco na imagem
+    .byte 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 1
+    .byte 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 1
+    .byte 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1
+    .byte 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1
+    .byte 1, 0, 0, 1, 1, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1
+
+    # --- LINHAS 18 a 23: NUVEM INFERIOR SEGURA ---
+    .byte 1, 0, 0, 1, 1, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1
+    .byte 1, 0, 0, 1, 1, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 1
+    .byte 1, 0, 0, 1, 1, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1
+    .byte 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1
+    .byte 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1
+    .byte 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1
+
+    .byte 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1 # 25
+    .byte 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1
+    .byte 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1
+    .byte 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1
+    .byte 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1
 # ============ ECONOMIA ============
 MOEDAS: .word 0              # Contador de moedas (começa com 0)
 
@@ -586,48 +627,57 @@ LOOP_DO_JOGO:
     call LIMPAR_TELA_TOTAL
     j LOOP_DO_JOGO
 # =========================================================
-# ATUALIZAR_ANIMACAO_CARNEIRO
-# Calcula o próximo frame baseado em (Width * Height) + 8
+# ATUALIZAR_ANIMACAO_CARNEIRO (SAFE VERSION)
 # =========================================================
 ATUALIZAR_ANIMACAO_CARNEIRO:
-    # 1. Verificar Timer (Controle de velocidade)
+    # 1. Timer Check
     la t0, SHEEP_ANIM_TIMER
     lw t1, 0(t0)
     addi t1, t1, 1
-    li t2, 10              # VELOCIDADE: Aumente para ficar mais lento
+    li t2, 10              
     sw t1, 0(t0)
-    blt t1, t2, FIM_ANIM_S # Se não deu o tempo, sai
+    blt t1, t2, FIM_ANIM_S 
 
-    # 2. Resetar Timer
     sw zero, 0(t0)
 
-    # 3. Carregar Ponteiro do Frame Atual
+    # 2. Load Current Pointer
     la t0, SHEEP_FRAME_PTR
-    lw t1, 0(t0)           # t1 = Endereço do frame atual
+    lw t1, 0(t0)           # Current address
 
-    # 4. Calcular o Tamanho do Frame Atual
-    # Estrutura: [Width (4b)] [Height (4b)] [Pixels...]
-    lw t2, 0(t1)           # Carrega Largura (W)
-    lw t3, 4(t1)           # Carrega Altura (H)
+    # --- SAFETY CHECK ---
+    # Check if t1 is valid. If it's zero or weird, reset.
+    beqz t1, RESET_LOOP_S
     
-    # Cálculo: Offset = (W * H) + 8
-    # Nota: Assumindo 1 byte por pixel conforme seu código original
-    mul t4, t2, t3         # t4 = Quantidade de pixels
-    addi t4, t4, 8         # Adiciona 8 bytes do cabeçalho (W e H)
-
-    # 5. Avançar Ponteiro
-    add t1, t1, t4         # Ponteiro vai para o início do PRÓXIMO frame
-
-    # 6. Verificar se chegou ao fim do bloco .data
+    # Check if we are already at or past the end marker
     la t5, sheep_anim_end
     bge t1, t5, RESET_LOOP_S
 
-    # Salva o novo ponteiro
+    # 3. Read Frame Header (Width, Height)
+    lw t2, 0(t1)           # Width
+    lw t3, 4(t1)           # Height
+    
+    # Validation: If Width or Height are 0 or too huge, it's a bug. Reset.
+    beqz t2, RESET_LOOP_S
+    li t6, 64              # Max width expected
+    bgt t2, t6, RESET_LOOP_S
+
+    # 4. Calculate Offset
+    mul t4, t2, t3         # Pixels = W * H
+    addi t4, t4, 8         # + Header (8 bytes)
+
+    # 5. Advance and Check
+    add t1, t1, t4         # Next frame address
+    
+    # Check if the NEW address is valid
+    la t5, sheep_anim_end
+    bge t1, t5, RESET_LOOP_S
+
+    # Save new valid pointer
     sw t1, 0(t0)
     ret
 
     RESET_LOOP_S:
-    # Volta para o primeiro frame
+    # Reset to start
     la t1, sheep_anim_seq
     sw t1, 0(t0)
 
@@ -681,10 +731,10 @@ INICIO_VITORIA:
     
     # Desenha a tela de vitória
     li s0, 0
-    la a0, win_sprite
+    la a0, win
     call IMPRIMIR_TELA_CHEIA
     li s0, 1
-    la a0, win_sprite
+    la a0, win
     call IMPRIMIR_TELA_CHEIA
 
     # Loop de espera pelo 'E'
@@ -1446,26 +1496,7 @@ DESENHAR_NUMERO:
     addi sp, sp, 20
     ret
 
-# =========================================================
-# DESENHAR_FLAUTA_HUD
-# Mostra a flauta fixa na barra inferior
-# =========================================================
-DESENHAR_FLAUTA_HUD:
-    addi sp, sp, -4
-    sw ra, 0(sp)
 
-    la a0, flauta_hud_sprite  # O sprite que criamos acima
-    
-    # --- POSIÇÃO NA TELA ---
-    li a1, 150                # X (Ao lado do inventário)
-    li a2, 220                # Y (Mesma altura dos itens)
-    
-    mv a3, s0                 # Frame atual
-    call IMPRIMIR
-
-    lw ra, 0(sp)
-    addi sp, sp, 4
-    ret
 # =========================================================
 # DESENHAR_INVENTARIO
 # Exibe ícones dos upgrades comprados na parte inferior
@@ -1505,50 +1536,48 @@ DESENHAR_INVENTARIO:
     addi sp, sp, 4
     ret
 # =========================================================
-# HUD / BARRA DE STATUS (CONFIGURÁVEL)
+# HUD / BARRA DE STATUS (ATUALIZADA)
 # =========================================================
 DESENHAR_VIDAS:
     addi sp, sp, -4
     sw ra, 0(sp)
     
-    # --- CONFIGURAÇÃO DE POSIÇÃO ---
-    .eqv HEART_START_X  22    # Posição X inicial
-    .eqv HEART_START_Y  210   # Posição Y (Altura)
-    .eqv HEART_SPACING  10   # Distância entre corações
+    # --- CONFIGURAÇÃO DE POSIÇÃO DOS CORAÇÕES ---
+    .eqv HEART_START_X  22
+    .eqv HEART_START_Y  210
+    .eqv HEART_SPACING  10
     
     # --- 1. Desenha os "Slots" vazios (Fundo cinza) ---
-    la a0, tile_in   # Sprite do slot vazio (ou hud_coracao vazio)
+    la a0, tile_in
     mv a3, s0
     
-    # Coração 1 (Fundo)
+    # Coração 1
     li a1, HEART_START_X
     li a2, HEART_START_Y
     call IMPRIMIR
-    
-    # Coração 2 (Fundo)
+    # Coração 2
     li a1, HEART_START_X
-    addi a1, a1, HEART_SPACING  # Soma espaçamento
+    addi a1, a1, HEART_SPACING
     li a2, HEART_START_Y
     call IMPRIMIR
-    
-    # Coração 3 (Fundo)
+    # Coração 3
     li a1, HEART_START_X
     li t0, HEART_SPACING
     add a1, a1, t0
-    add a1, a1, t0              # Soma espaçamento 2x
+    add a1, a1, t0
     li a2, HEART_START_Y
     call IMPRIMIR
     
-    # --- 2. Desenha os Corações Cheios (Baseado na Vida) ---
+    # --- 2. Desenha os Corações Cheios ---
     la t0, VIDAS
-    lw t0, 0(t0)      # Quantas vidas tem?
+    lw t0, 0(t0)
     
     li a1, HEART_START_X
     li a2, HEART_START_Y
     la a0, hud_coracao
     
     LOOP_VIDAS:
-        blez t0, FIM_DESENHAR_VIDAS
+        blez t0, CHECK_MAPA_HUD
         
         addi sp, sp, -12
         sw a1, 0(sp)
@@ -1562,20 +1591,18 @@ DESENHAR_VIDAS:
         lw t0, 8(sp)
         addi sp, sp, 12
         
-        addi a1, a1, HEART_SPACING  # <--- ESPAÇAMENTO AQUI
+        addi a1, a1, HEART_SPACING
         addi t0, t0, -1
         j LOOP_VIDAS
 
-    FIM_DESENHAR_VIDAS:
-    
-    # --- 2. PLACAR DE MOEDAS (ESQUERDA) ---
-    # # Ícone da moeda
-    # li a1, 63         
-    # li a2, 223          
-    # mv a3, s0
-    # la a0, coin_sprite 
-    # call IMPRIMIR
+    CHECK_MAPA_HUD:
+    # --- VERIFICA O MAPA PARA DECIDIR O QUE MOSTRAR ---
+    la t0, MAPA_ATUAL
+    lw t0, 0(t0)
+    la t1, map_3
+    beq t0, t1, HUD_CARNEIROS_MODE
 
+    # === MODO NORMAL (MOSTRAR MOEDAS) ===
     # Número de moedas
     la t0, MOEDAS
     lw a0, 0(t0)       
@@ -1583,25 +1610,27 @@ DESENHAR_VIDAS:
     li a2, 218          
     mv a3, s0          
     call DESENHAR_NUMERO
+    
+    # Desenha inventário normal
     call DESENHAR_INVENTARIO
-    call DESENHAR_FLAUTA_HUD
-    # --- 3. PLACAR DE CARNEIROS (DIREITA - FASE) ---
-    # Verifica se estamos no Mapa 3 para desenhar o contador
-    la t0, MAPA_ATUAL
-    lw t0, 0(t0)
-    la t1, map_3
-    bne t0, t1, FIM_HUD_FINAL # Se não for mapa 3, não desenha ou desenha 0
+    j FIM_HUD_FINAL
+
+    # === MODO MAPA 3 (MOSTRAR SÓ CARNEIROS) ===
+    HUD_CARNEIROS_MODE:
+    # Desenha Sprite do Carneiro Pequeno (Icone)
+    # Se você tiver um sprite 'icon_sheep', use aqui. Se não, desenhe só o número.
     
-    # Desenha o número de carneiros coletados
+    # Desenha o número de carneiros coletados NA POSIÇÃO DAS MOEDAS
     la t0, SHEEP_COUNT
-    lw a0, 0(t0)       # Carrega o valor (Ex: 0, 1, 2...)
+    lw a0, 0(t0)
     
-    # Posição X=280 (Ajuste fino para cair ao lado de "fase:")
-    li a1, 280         
-    li a2, 225         # Mesma altura das moedas
-    mv a3, s0          # Frame buffer atual
-    
+    li a1, 35          # Mesma posição X das moedas
+    li a2, 218         # Mesma posição Y das moedas
+    mv a3, s0          
     call DESENHAR_NUMERO
+    
+    # Desenha inventário também (opcional, se quiser manter os itens visíveis)
+    call DESENHAR_INVENTARIO
 
     FIM_HUD_FINAL:
     lw ra, 0(sp)
@@ -2863,12 +2892,11 @@ MUDAR_PARA_MAPA_3:
     la t0, MAPA_ATUAL
     la t1, map_3        
     sw t1, 0(t0)
-    
     la t0, PTR_HIT_MAP
     la t1, LEVEL_HIT_MAP_3
     sw t1, 0(t0)
 
-    # 2. LIMPA INIMIGOS ANTIGOS
+    # 2. LIMPA INIMIGOS ANTIGOS E PROJÉTEIS
     la t0, POS_OCULTA
     la t1, PTR_INIMIGO_1
     sw t0, 0(t1)
@@ -2877,30 +2905,22 @@ MUDAR_PARA_MAPA_3:
     la t1, PTR_INIMIGO_3
     sw t0, 0(t1)
     
-    # === CORREÇÃO: LIMPEZA DE ESTADO SUJO ===
-    
-    # A) Remove todos os tiros da tela (Zera TIRO_ATIVO)
     la t0, TIRO_ATIVO
     sw zero, 0(t0)
     sw zero, 4(t0)
     sw zero, 8(t0)
-
-    # B) Reseta o Pet (Para de buscar itens antigos)
     la t0, KIT_STATE
-    sw zero, 0(t0)     # Volta para o estado 0 (Seguir Samara)
+    sw zero, 0(t0)
     la t0, KIT_TARGET_PTR
-    sw zero, 0(t0)     # Limpa ponteiro de alvo
-    
-    # ========================================
+    sw zero, 0(t0)
 
-    # 3. RESET E SPAWN DOS 8 CARNEIROS
+    # 3. RESET DO JOGO DOS CARNEIROS
     la t0, SHEEP_COUNT
     sw zero, 0(t0)
     la t0, SHEEP_TIMER
     sw zero, 0(t0)
     
-    # ... (O resto da sua função continua igual)
-    # --- LIMPEZA TOTAL DO ARRAY ---
+    # Limpa Array
     la t0, SHEEP_ARRAY
     li t1, 60 
     LOOP_CLEAR_M3:
@@ -2909,90 +2929,25 @@ MUDAR_PARA_MAPA_3:
         addi t1, t1, -1
         bnez t1, LOOP_CLEAR_M3
     
-    # --- SPAWNAR 8 FIXOS ---
-    la t0, SHEEP_ARRAY
-    
-    # Carneiro 0
-    li t1, 50   # X
-    sw t1, 0(t0)
-    li t1, 50   # Y
-    sw t1, 4(t0)
-    li t1, 1    # Ativo
-    sw t1, 8(t0)
-    
-    # Carneiro 1
-    addi t0, t0, 16
-    li t1, 100
-    sw t1, 0(t0)
-    li t1, 50
-    sw t1, 4(t0)
-    li t1, 1
-    sw t1, 8(t0)
+    # --- SPAWN INTELIGENTE ---
+    # Tenta criar 8 carneiros bem distribuídos
+    li a0, 8
+    call SPAWNAR_CARNEIROS_ESPALHADOS
 
-    # Carneiro 2
-    addi t0, t0, 16
-    li t1, 150
-    sw t1, 0(t0)
-    li t1, 50
-    sw t1, 4(t0)
-    li t1, 1
-    sw t1, 8(t0)
-
-    # Carneiro 3
-    addi t0, t0, 16
-    li t1, 200
-    sw t1, 0(t0)
-    li t1, 50
-    sw t1, 4(t0)
-    li t1, 1
-    sw t1, 8(t0)
-
-    # Carneiro 4
-    addi t0, t0, 16
-    li t1, 50
-    sw t1, 0(t0)
-    li t1, 150
-    sw t1, 4(t0)
-    li t1, 1
-    sw t1, 8(t0)
-
-    # Carneiro 5
-    addi t0, t0, 16
-    li t1, 100
-    sw t1, 0(t0)
-    li t1, 150
-    sw t1, 4(t0)
-    li t1, 1
-    sw t1, 8(t0)
-
-    # Carneiro 6
-    addi t0, t0, 16
-    li t1, 150
-    sw t1, 0(t0)
-    li t1, 150
-    sw t1, 4(t0)
-    li t1, 1
-    sw t1, 8(t0)
-
-    # Carneiro 7
-    addi t0, t0, 16
-    li t1, 200
-    sw t1, 0(t0)
-    li t1, 150
-    sw t1, 4(t0)
-    li t1, 1
-    sw t1, 8(t0)
-
-    # 4. Teleporta Jogador
+    # 4. Teleporta Jogador para o MEIO da nuvem
     la t0, SAMARA_POS
     li t1, 160
     sh t1, 0(t0)
-    li t1, 100
+    li t1, 140
     sh t1, 2(t0)
     
+    # Configura Timer de 10s
+    la t0, GAME_TIMER_M3
+    li t1, 600
+    sw t1, 0(t0)
+
     call TOCAR_SOM_COLETA
     
-    # Limpa tela
     li s0, 0
     call LIMPAR_TELA_TOTAL
     li s0, 1
@@ -3000,6 +2955,121 @@ MUDAR_PARA_MAPA_3:
     
     j LOOP_DO_JOGO
 
+# =========================================================
+# SPAWNAR_CARNEIROS_ESPALHADOS
+# a0 = Quantidade a criar
+# =========================================================
+SPAWNAR_CARNEIROS_ESPALHADOS:
+    addi sp, sp, -24
+    sw ra, 0(sp)
+    sw s0, 4(sp) # Count Loop
+    sw s1, 8(sp) # Target Count
+    sw s2, 12(sp) # Seed
+    sw s3, 16(sp) # Ponteiro Array
+    sw s4, 20(sp) 
+
+    mv s1, a0            # Quantos criar
+    li s0, 0             # Criados até agora
+    la s3, SHEEP_ARRAY
+    
+    la t0, TEMPO_DE_EXECUCAO
+    lw s2, 0(t0)         # Seed Inicial
+
+    LOOP_SPAWN_DIST:
+        beq s0, s1, FIM_SPAWN_DIST
+        
+        # --- TENTAR GERAR POSIÇÃO (Max 20 tentativas por carneiro) ---
+        li s4, 20
+        
+        RETRY_GEN_SMART:
+            # Gerar X (32 a 280)
+            li t0, 1103515245
+            mul s2, s2, t0
+            addi s2, s2, 12345
+            bgez s2, ABS_S1
+            neg s2, s2
+            ABS_S1:
+            li t1, 248
+            rem t2, s2, t1
+            addi t2, t2, 32      # X CANDIDATO
+            
+            # Gerar Y (32 a 200)
+            mul s2, s2, t0
+            addi s2, s2, 12345
+            bgez s2, ABS_S2
+            neg s2, s2
+            ABS_S2:
+            li t1, 168
+            rem t3, s2, t1
+            addi t3, t3, 32      # Y CANDIDATO
+            
+            # 1. VALIDAÇÃO DE MAPA (PAREDE)
+            addi sp, sp, -12
+            sw t2, 0(sp)
+            sw t3, 4(sp)
+            mv a0, t2
+            mv a1, t3
+            call CHECAR_COLISAO_MAPA
+            mv t4, a0
+            lw t3, 4(sp)
+            lw t2, 0(sp)
+            addi sp, sp, 12
+            
+            bnez t4, FALHOU_POSICAO  # Se bateu na parede, tenta de novo
+
+            # 2. VALIDAÇÃO DE DISTÂNCIA (Não nascer colado)
+            # Verifica contra todos os carneiros já ativos
+            la t5, SHEEP_ARRAY
+            li t6, 0             # Índice checagem
+            
+            LOOP_CHECK_NEAR:
+                beq t5, s3, POSICAO_APROVADA # Chegou no slot atual? OK
+                
+                lw t0, 0(t5)     # Outro X
+                lw t1, 4(t5)     # Outro Y
+                
+                # Distância Manhattan
+                sub t0, t0, t2
+                bgez t0, ABS_D1
+                neg t0, t0
+                ABS_D1:
+                sub t1, t1, t3
+                bgez t1, ABS_D2
+                neg t1, t1
+                ABS_D2:
+                add t0, t0, t1   # Distancia Total
+                
+                li t1, 60        # Distância mínima (aumentei pra espalhar bem)
+                blt t0, t1, FALHOU_POSICAO
+                
+                addi t5, t5, 16
+                j LOOP_CHECK_NEAR
+
+            FALHOU_POSICAO:
+            addi s4, s4, -1
+            bnez s4, RETRY_GEN_SMART
+            # Se falhou 20x, usa a última posição mesmo (evita travar o jogo)
+
+        POSICAO_APROVADA:
+        sw t2, 0(s3)     # Salva X
+        sw t3, 4(s3)     # Salva Y
+        li t0, 1
+        sw t0, 8(s3)     # Ativo
+        sw zero, 12(s3)  # Dir
+        
+        addi s3, s3, 16  # Próximo slot
+        addi s0, s0, 1   # Cont++
+        j LOOP_SPAWN_DIST
+
+    FIM_SPAWN_DIST:
+    lw s4, 20(sp)
+    lw s3, 16(sp)
+    lw s2, 12(sp)
+    lw s1, 8(sp)
+    lw s0, 4(sp)
+    lw ra, 0(sp)
+    addi sp, sp, 24
+    ret
 # ATUALIZAÇÃO DE INIMIGOS (INDEPENDENTE)
 ATUALIZAR_INIMIGOS:
     addi sp, sp, -4
@@ -3896,10 +3966,11 @@ DESENHAR_KIT:
     addi sp, sp, 4
     ret
 # =========================================================
-# LÓGICA FINAL: CAMINHADA INTELIGENTE (SEM BATER CABEÇA)
+# LÓGICA FINAL: CAMINHADA + TIMER + CONDIÇÃO DE VITÓRIA
 # =========================================================
 LOGICA_CARNEIROS:
-    addi sp, sp, -28
+    # Ajuste de pilha para 32 bytes (Alinhado a 16)
+    addi sp, sp, -32
     sw ra, 0(sp)
     sw s0, 4(sp)
     sw s1, 8(sp)
@@ -3908,6 +3979,17 @@ LOGICA_CARNEIROS:
     sw s4, 20(sp) # Player Y
     sw s5, 24(sp) # Tempo
 
+    # === TIMER DE 10 SEGUNDOS ===
+    la t0, GAME_TIMER_M3
+    lw t1, 0(t0)
+    addi t1, t1, -1        # Decrementa timer
+    sw t1, 0(t0)
+    
+    # Se timer <= 0, Acabou o tempo!
+    blez t1, FIM_DO_TEMPO_M3
+    # ==================================
+
+    # Se o crash persistir, comente esta linha para testar:
     call ATUALIZAR_ANIMACAO_CARNEIRO
 
     # 1. Carrega Posição do Player e Tempo
@@ -3918,10 +4000,10 @@ LOGICA_CARNEIROS:
     la t0, TEMPO_DE_EXECUCAO
     lw s5, 0(t0)     
 
-    # Loop pelos 8 carneiros
+    # Loop pelos carneiros
     la s0, SHEEP_ARRAY
     li s1, 0
-    li s2, 8         
+    li s2, MAX_SHEEP         
 
     LOOP_MOVIMENTO_WALK:
         beq s1, s2, FIM_LOGICA_WALK
@@ -3929,96 +4011,75 @@ LOGICA_CARNEIROS:
         lw t0, 8(s0)     # Ativo?
         beqz t0, PROXIMO_CARNEIRO_WALK
 
-# === LÓGICA DE SLOW (NOVO) ===
-        lw t6, 12(s0)          # Lê a word de controle (Direção + Slow)
-        srli a4, t6, 16        # Pega a parte alta (Timer do Slow)
-        beqz a4, MOVIMENTO_NORMAL_SHEEP # Se for 0, vida normal
+        # === LÓGICA DE SLOW ===
+        lw t6, 12(s0)          
+        srli a4, t6, 16        
+        beqz a4, MOVIMENTO_NORMAL_SHEEP 
         
-        # Se tem slow:
-        addi a4, a4, -1        # Decrementa timer
-        slli a4, a4, 16        # Move de volta pro topo
-        li a5, 0x0000FFFF      # Máscara
-        and t6, t6, a5         # Pega só a direção original
-        or t6, t6, a4          # Junta novo timer
-        sw t6, 12(s0)          # Salva
+        addi a4, a4, -1        
+        slli a4, a4, 16        
+        li a5, 0x0000FFFF      
+        and t6, t6, a5         
+        or t6, t6, a4          
+        sw t6, 12(s0)          
         
-        # EFEITO DE LENTIDÃO: Só anda frame sim, frame não (50% speed)
-        andi a4, s5, 1         # Usa o tempo global (s5) par/impar
-        bnez a4, PROXIMO_CARNEIRO_WALK # Se ímpar, PULA O MOVIMENTO (congela)
+        andi a4, s5, 1         
+        bnez a4, PROXIMO_CARNEIRO_WALK 
 
         MOVIMENTO_NORMAL_SHEEP:
-        # ==============================
-
-        lw t1, 0(s0)     # Sheep X
-        lw t2, 4(s0)     # Sheep Y
+        
         lw t1, 0(s0)     # Sheep X
         lw t2, 4(s0)     # Sheep Y
         
-        # Salva posições originais para saber se bateu
-        mv a6, t1        # X Antigo
-        mv a7, t2        # Y Antigo
+        # Salva posições originais
+        mv a6, t1        
+        mv a7, t2        
 
-        # --- FASE 1: CHECA DISTÂNCIA (FUGA OU PASSEIO?) ---
+        # --- FASE 1: CHECA DISTÂNCIA (110px) ---
         sub t3, t1, s3
         bgez t3, ABS_DX_W
         neg t3, t3
         ABS_DX_W:
-        
         sub t4, t2, s4
         bgez t4, ABS_DY_W
         neg t4, t4
         ABS_DY_W:
 
-        li t5, 110      # Raio de detecção
+        li t5, 110      
         bge t3, t5, MODO_PASSEIO_REAL
         bge t4, t5, MODO_PASSEIO_REAL
 
-        # === MODO FUGA (SAMARA PERTO - REATIVO) ===
-        # Prioridade máxima: Correr dela agora!
-        
-        # X
+        # === MODO FUGA ===
         beq s3, t1, FOGE_CONT_Y_W
         blt s3, t1, FOGE_DIR_CW
-        addi t1, t1, -4    # Foge Esq
+        addi t1, t1, -4    
         j FOGE_CONT_Y_W
         FOGE_DIR_CW:
-        addi t1, t1, 4     # Foge Dir
+        addi t1, t1, 4     
 
         FOGE_CONT_Y_W:
         blt s4, t2, FOGE_BAIXO_CW
-        addi t2, t2, -4    # Foge Cima
+        addi t2, t2, -4    
         j CHECK_REPULSAO_W
         FOGE_BAIXO_CW:
-        addi t2, t2, 4     # Foge Baixo
+        addi t2, t2, 4     
         j CHECK_REPULSAO_W
 
-# === MODO PASSEIO (CAMINHADA LONGA) ===
+        # === MODO PASSEIO ===
         MODO_PASSEIO_REAL:
-        
-        # Usa o offset 12 da struct como "Direção Atual"
-        # Se 12(s0) == 0, precisa escolher nova direção
-        lw t6, 12(s0)   # Lê [TIMER | DIREÇÃO]
-        
-        # >>>>> ADICIONE ESTAS DUAS LINHAS AQUI <<<<<
-        slli t6, t6, 16  # Empurra pra esquerda (apaga o timer)
-        srli t6, t6, 16  # Traz de volta (agora t6 tem só a direção pura)
-        # ============================================
+        lw t6, 12(s0)   
+        slli t6, t6, 16 
+        srli t6, t6, 16 
 
-        # A cada ~60 frames (1 seg), força troca de direção
-        andi t5, s5, 63  # Pega últimos 6 bits do tempo
+        andi t5, s5, 63 
         bnez t5, MANTER_DIRECAO
-        li t6, 0         # Força recálculo
+        
+        add t5, s5, s1   
+        andi t5, t5, 3   
+        addi t6, t5, 1   
+        sw t6, 12(s0)    
         
         MANTER_DIRECAO:
-        bnez t6, EXECUTA_MOVIMENTO
-        
-        # --- ESCOLHER NOVA DIREÇÃO (Pseudo-Random) ---
-        add t5, s5, s1   # Tempo + Index
-        andi t5, t5, 3   # 0 a 3
-        addi t6, t5, 1   # 1 a 4 (Dir, Esq, Baixo, Cima)
-        sw t6, 12(s0)    # Salva na memória do carneiro
-        
-        EXECUTA_MOVIMENTO:
         li t5, 1
         beq t6, t5, ANDAR_DIR
         li t5, 2
@@ -4026,119 +4087,78 @@ LOGICA_CARNEIROS:
         li t5, 3
         beq t6, t5, ANDAR_BAIXO
         
-        # ANDAR_CIMA (4)
+        # Cima
         addi t2, t2, -1
         j CHECK_REPULSAO_W
-        
         ANDAR_BAIXO:
         addi t2, t2, 1
         j CHECK_REPULSAO_W
-        
         ANDAR_ESQ:
         addi t1, t1, -1
         j CHECK_REPULSAO_W
-        
         ANDAR_DIR:
         addi t1, t1, 1
 
-        # --- FASE 2: REPULSÃO ENTRE CARNEIROS ---
+        # --- FASE 2: LIMITES E COLISÃO ---
         CHECK_REPULSAO_W:
-        la s5, SHEEP_ARRAY
-        li t5, 0 # j = 0
-        
-        LOOP_REPULSAO_W:
-            li t6, 8
-            beq t5, t6, FIM_REPULSAO_W
-            
-            beq s1, t5, NEXT_REP_W 
-            
-            lw t6, 8(s5)    
-            beqz t6, NEXT_REP_W
-
-            lw t3, 0(s5)    # Outro X
-            lw t4, 4(s5)    # Outro Y
-            
-            # Checa Distancia (Raio 30px)
-            sub t6, t1, t3  
-            bgez t6, ABS_RX_W
-            neg t6, t6
-            ABS_RX_W:
-            li a0, 30
-            bge t6, a0, NEXT_REP_W
-
-            sub t6, t2, t4  
-            bgez t6, ABS_RY_W
-            neg t6, t6
-            ABS_RY_W:
-            bge t6, a0, NEXT_REP_W
-
-            # Empurra
-            blt t1, t3, EMPURRA_ESQ_W
-            addi t1, t1, 1  
-            j EMPURRA_Y_W
-            EMPURRA_ESQ_W:
-            addi t1, t1, -1 
-            
-            EMPURRA_Y_W:
-            blt t2, t4, EMPURRA_CIMA_W
-            addi t2, t2, 1
-            j NEXT_REP_W
-            EMPURRA_CIMA_W:
-            addi t2, t2, -1
-
-            NEXT_REP_W:
-            addi s5, s5, 16
-            addi t5, t5, 1
-            j LOOP_REPULSAO_W
-        
-        FIM_REPULSAO_W:
-
-        # --- FASE 3: TRAVAS DE SEGURANÇA ---
-        li t6, 24
+        # Limites da Tela
+        li t6, 8
         blt t1, t6, FIX_MIN_X_W
-        
         li t6, 280
         bgt t1, t6, FIX_MAX_X_W
         j CHECK_Y_LIMIT_W
-        
-        FIX_MIN_X_W: 
-            li t1, 24
-            j CHECK_Y_LIMIT_W
-        FIX_MAX_X_W: 
-            li t1, 280
+        FIX_MIN_X_W: li t1, 8
+        j CHECK_Y_LIMIT_W
+        FIX_MAX_X_W: li t1, 280
         
         CHECK_Y_LIMIT_W:
-        li t6, 24
+        li t6, 8
         blt t2, t6, FIX_MIN_Y_W
-        
-        li t6, 200
+        li t6, 220
         bgt t2, t6, FIX_MAX_Y_W
-        j SALVA_POS_W
-        
-        FIX_MIN_Y_W: 
-            li t2, 24
-            j SALVA_POS_W
-        FIX_MAX_Y_W: 
-            li t2, 200
+        j VERIFICAR_PAREDE_REAL
+        FIX_MIN_Y_W: li t2, 8
+        j VERIFICAR_PAREDE_REAL
+        FIX_MAX_Y_W: li t2, 220
 
-        SALVA_POS_W:
+        # === VALIDAÇÃO DE PAREDE (EVITA BURACOS) ===
+        VERIFICAR_PAREDE_REAL:
+        # Pilha alinhada (32 bytes)
+        addi sp, sp, -32
+        sw t0, 0(sp)
+        sw t1, 4(sp)
+        sw t2, 8(sp)
+        sw s0, 12(sp)
+        sw s1, 16(sp)
+        
+        mv a0, t1
+        addi a0, a0, 8    # Centro X
+        mv a1, t2
+        addi a1, a1, 8    # Centro Y
+        
+        call CHECAR_COLISAO_MAPA  
+        mv t5, a0                 
+        
+        lw s1, 16(sp)
+        lw s0, 12(sp)
+        lw t2, 8(sp)
+        lw t1, 4(sp)
+        lw t0, 0(sp)
+        addi sp, sp, 32
+        
+        bnez t5, BATEU_NA_NUVEM
+
+        # SEGURO: Salva posição
         sw t1, 0(s0)
         sw t2, 4(s0)
-
-        # === MUDANÇA CRUCIAL: DETECTOR DE PAREDE ===
-        # Se a posição nova for igual à antiga (bateu na trava), muda a direção AGORA.
-        bne t1, a6, CHECK_Y_WALL  # Se X mudou, ok
-        # X não mudou -> Bateu na parede lateral -> Força nova direção
-        sw zero, 12(s0)           # Zera a direção (força escolha nova no prox frame)
         j FIM_WALL_CHECK
 
-        CHECK_Y_WALL:
-        bne t2, a7, FIM_WALL_CHECK # Se Y mudou, ok
-        # Y não mudou -> Bateu no teto/chão -> Força nova direção
-        sw zero, 12(s0)
+        BATEU_NA_NUVEM:
+        sw a6, 0(s0)        # Restaura posição antiga
+        sw a7, 4(s0)
+        sw zero, 12(s0)     # Força troca de direção
 
         FIM_WALL_CHECK:
-        # Recupera s5 (Tempo)
         la t0, TEMPO_DE_EXECUCAO
         lw s5, 0(t0) 
 
@@ -4147,6 +4167,33 @@ LOGICA_CARNEIROS:
         addi s1, s1, 1
         j LOOP_MOVIMENTO_WALK
 
+    # =======================================================
+    # FIM DO TEMPO
+    # =======================================================
+    FIM_DO_TEMPO_M3:
+    # Restaura a pilha antes de pular fora!
+    lw s5, 24(sp)
+    lw s4, 20(sp)
+    lw s3, 16(sp)
+    lw s2, 12(sp)
+    lw s1, 8(sp)
+    lw s0, 4(sp)
+    lw ra, 0(sp)
+    addi sp, sp, 32  # Desaloca os 32 bytes
+    
+    # --- LÓGICA DE VITÓRIA ---
+    la t0, SHEEP_COUNT
+    lw t1, 0(t0)       
+    li t2, 8           
+    bge t1, t2, VITORIA_M3_TIME
+    j INICIO_MORTE_GAUNTLET
+
+    VITORIA_M3_TIME:
+    j TELA_FINAL_REAL
+
+    # =======================================================
+    # RETORNO NORMAL
+    # =======================================================
     FIM_LOGICA_WALK:
     lw s5, 24(sp)
     lw s4, 20(sp)
@@ -4155,9 +4202,9 @@ LOGICA_CARNEIROS:
     lw s1, 8(sp)
     lw s0, 4(sp)
     lw ra, 0(sp)
-    addi sp, sp, 28
+    addi sp, sp, 32
     ret
-# =========================================================
+#==================================
 # FUNÇÃO: CHECAR_COLISAO_ENTRE_CARNEIROS
 # Saída: a0 = 1 (Vai bater), 0 (Livre)
 # =========================================================
@@ -4296,66 +4343,94 @@ PROCESSAR_ANIM_ESTADO:
     addi sp, sp, 12
     ret
 # =========================================================
-# SPAWNAR TRIO (SIMPLIFICADO)
-# Procura 3 vagas livres e coloca carneiros em posições aleatórias seguras
-# =========================================================
-# =========================================================
-# SPAWN SEGURO (SEM VALORES NEGATIVOS)
+# SPAWN SEGURO (COM VALIDAÇÃO DE PAREDE)
 # =========================================================
 M3_SPAWNAR_TRIO:
     addi sp, sp, -4
     sw ra, 0(sp)
     
-    li t0, 3             # Spawnar 3
-    la t1, SHEEP_ARRAY
-    li t2, 0             # Índice
-    li t3, MAX_SHEEP
-    
-    la t5, TEMPO_DE_EXECUCAO
-    lw t5, 0(t5)         
+    li s1, 3             # Quantidade para spawnar (3)
+    la s2, SHEEP_ARRAY   # Ponteiro array
+    li s3, MAX_SHEEP     # Limite
+    li s4, 0             # Índice loop
 
-    M3_LOOP_SPAWN:
-        beqz t0, M3_FIM_SPAWN     
-        beq t2, t3, M3_FIM_SPAWN  
+    # Pega seed inicial
+    la t0, TEMPO_DE_EXECUCAO
+    lw s5, 0(t0)         
+
+    LOOP_FIND_SLOT:
+        beqz s1, FIM_SPAWN_SAFE
+        beq s4, s3, FIM_SPAWN_SAFE
         
-        lw t4, 8(t1)     # Ativo?
-        bnez t4, M3_NEXT_SLOT
+        lw t4, 8(s2)     # Slot ocupado?
+        bnez t4, NEXT_SLOT_SAFE
         
-        # --- ATIVAR ---
+        # --- TENTATIVA DE GERAR POSIÇÃO VÁLIDA ---
+        li s6, 10        # Tenta no máximo 10 vezes por slot (pra não travar)
+        
+        RETRY_GEN_POS:
+            # Gera X (Margem 32 a 288)
+            addi s5, s5, 123
+            bgez s5, P_SEED_X
+            neg s5, s5
+            P_SEED_X:
+            li t5, 256
+            rem t0, s5, t5
+            addi t0, t0, 32   # X gerado
+            
+            # Gera Y (Margem 32 a 208)
+            addi s5, s5, 45
+            srli s5, s5, 1
+            li t5, 176
+            rem t1, s5, t5
+            addi t1, t1, 32   # Y gerado
+            
+            # --- VALIDAÇÃO: CHECA SE É PAREDE ---
+            # Salva registradores antes da chamada
+            addi sp, sp, -20
+            sw t0, 0(sp)      # X
+            sw t1, 4(sp)      # Y
+            sw s1, 8(sp)
+            sw s2, 12(sp)
+            sw s4, 16(sp)
+            
+            mv a0, t0         # Arg X
+            mv a1, t1         # Arg Y
+            call CHECAR_COLISAO_MAPA  # Retorna a0=1 se parede
+            mv t2, a0         # t2 = resultado
+            
+            lw s4, 16(sp)
+            lw s2, 12(sp)
+            lw s1, 8(sp)
+            lw t1, 4(sp)
+            lw t0, 0(sp)
+            addi sp, sp, 20
+            
+            beqz t2, POSICAO_VALIDA  # Se a0=0 (chão), aceita!
+            
+            # Se bateu, tenta de novo
+            addi s6, s6, -1
+            bnez s6, RETRY_GEN_POS
+            
+            # Se falhou 10x, desiste desse slot
+            j NEXT_SLOT_SAFE
+
+        POSICAO_VALIDA:
+        # Ativa o carneiro
+        sw t0, 0(s2)     # Salva X
+        sw t1, 4(s2)     # Salva Y
         li t4, 1
-        sw t4, 8(t1)     
-        sw zero, 12(t1)  
+        sw t4, 8(s2)     # Ativo = 1
+        sw zero, 12(s2)  # Reset direção
         
-        # --- GERAR X SEGURO ---
-        # Usa abs para garantir positivo
-        bgez t5, POS_X_SEED
-        neg t5, t5
-        POS_X_SEED:
+        addi s1, s1, -1  # Spawnou 1
         
-        li a1, 200
-        rem t6, t5, a1    # Resto seguro (0 a 199)
-        addi t6, t6, 50   # 50 a 249
-        sw t6, 0(t1)      # Salva X
-        
-        # --- GERAR Y SEGURO ---
-        # Modifica a seed
-        addi t5, t5, 123
-        srli t5, t5, 1
-        
-        li a1, 130
-        rem t6, t5, a1    # Resto (0 a 129)
-        addi t6, t6, 50   # 50 a 179
-        sw t6, 4(t1)      # Salva Y
-        
-        addi t0, t0, -1   
-        addi t5, t5, 45   # Muda seed para o próximo
+    NEXT_SLOT_SAFE:
+        addi s2, s2, 16
+        addi s4, s4, 1
+        j LOOP_FIND_SLOT
 
-    M3_NEXT_SLOT:
-        addi t1, t1, 16
-        addi t2, t2, 1
-        j M3_LOOP_SPAWN
-
-    M3_FIM_SPAWN:
+    FIM_SPAWN_SAFE:
     lw ra, 0(sp)
     addi sp, sp, 4
     ret
@@ -4753,5 +4828,7 @@ dama_sprite:
 
 win_sprite:  
     .include "sprites/win.data"
+win:  
+    .include "sprites/win2.data"
  .include "sprites/flauta_hud_sprite.data"
 
