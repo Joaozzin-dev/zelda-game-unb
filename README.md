@@ -9,6 +9,7 @@
 [![RISC-V](https://img.shields.io/badge/RISC--V-RV32I-blue?style=for-the-badge&logo=riscv)](https://riscv.org/)
 [![Assembly](https://img.shields.io/badge/Assembly-100%25-green?style=for-the-badge)](https://github.com)
 [![FPGRARS](https://img.shields.io/badge/Simulator-FPGRARS-orange?style=for-the-badge)](https://github.com/fpgrars)
+[![License](https://img.shields.io/badge/License-MIT-yellow?style=for-the-badge)](./LICENSE)
 
 </div>
 
@@ -70,11 +71,11 @@ Dive into an experience that captures the essence of 8-bit classics, where you c
 </tr>
 <tr>
 <td align="center" width="50%">
-<img src="./src/assets/game_over.png" width="100%" alt="Combat">
+<img src="./src/assets/game_over.png" width="100%" alt="Game Over">
 <br><b>⚔️ Game Over</b>
 </td>
 <td align="center" width="50%">
-<img src="./src/assets/samsara.jpg" width="100%" alt="Items">
+<img src="./src/assets/samsara.jpg" width="100%" alt="Samsara">
 <br><b>💤 Samsara</b>
 </td>
 </tr>
@@ -236,8 +237,9 @@ ZELDA...
 │   ├── assets/             # Assets do jogo / Game assets
 │   │   ├── map_1.png
 │   │   ├── tela_inicial.png
-│   │   ├── todos_itens.png
-│   │   └── xadrez.jpg
+│   │   ├── game_over.png
+│   │   ├── samsara.jpg
+│   │   └── todos_itens.png
 │   ├── guide/              # Documentação / Documentation
 │   │   └── Info.md
 │   ├── sounds/             # Arquivos MIDI / MIDI files
@@ -247,6 +249,7 @@ ZELDA...
 │   ├── hit_box.asm         # Sistema de colisão / Collision system
 │   └── main.asm            # Arquivo principal / Main file
 ├── fpgrars-x86_64-pc-wi... # Executável FPGRARS / FPGRARS executable
+├── LICENSE                 # Licença MIT / MIT License
 └── README.md
 ```
 
@@ -276,14 +279,14 @@ ZELDA...
 
 ## 📝 Licença
 
-Este projeto foi desenvolvido como parte de um trabalho acadêmico. Sinta-se livre para usar o código para fins educacionais.
+Este projeto está licenciado sob a Licença MIT - veja o arquivo [LICENSE](./LICENSE) para mais detalhes.
 
 </td>
 <td width="50%" valign="top">
 
 ## 📝 License
 
-This project was developed as part of an academic assignment. Feel free to use the code for educational purposes.
+This project is licensed under the MIT License - see the [LICENSE](./LICENSE) file for details.
 
 </td>
 </tr>
