@@ -1,222 +1,291 @@
-# Samsara: A Canção das Estrelas / Samsara: The Song of the Stars  
+<div align="center">
 
+# 🌟 Samsara: A Canção das Estrelas
+### *The Song of the Stars*
 
-<table>
-<tr>
-<td width="50%">
+<img src="https://i.pinimg.com/originals/b0/87/53/b08753d58f327fe00490bb5cfa7fcf03.gif" width="600" alt="Zelda Inspiration">
 
-# 🇧🇷 **Sobre o Projeto**
+*Inspirado pela magia atemporal de The Legend of Zelda*
 
-**Samsara: A Canção das Estrelas** é um jogo desenvolvido inteiramente em **Assembly RISC-V**, executado no simulador **FPGRARS**.  
-Inspirado na atmosfera clássica de **The Legend of Zelda**, combina exploração, combate simples e estética onírica.
-
-Você controla **Samsara**, uma criança que recebe uma flauta mágica de uma estrela cadente e viaja pelos reinos dos sonhos enfrentando inimigos baseados em peças de xadrez.
-
-</td>
-<td width="50%">
-
-# 🇺🇸 **About the Project**
-
-**Samsara: The Song of the Stars** is a game fully developed in **RISC-V Assembly**, running on the **FPGRARS** simulator.  
-Inspired by the classic charm of **The Legend of Zelda**, it blends exploration, simple combat and dreamlike visual aesthetics.
-
-You play as **Samsara**, a child who receives a magical flute from a falling star and journeys through dream realms fighting chess-based enemies.
-
-</td>
-</tr>
-</table>
+[![RISC-V](https://img.shields.io/badge/RISC--V-RV32I-blue?style=for-the-badge&logo=riscv)](https://riscv.org/)
+[![Assembly](https://img.shields.io/badge/Assembly-100%25-green?style=for-the-badge)](https://github.com)
+[![FPGRARS](https://img.shields.io/badge/Simulator-FPGRARS-orange?style=for-the-badge)](https://github.com/fpgrars)
 
 ---
 
-<table>
-<tr>
-<td width="50%">
+**[🇧🇷 Português](#-português)** • **[🇺🇸 English](#-english)**
 
-# 🎮 **Controles**
-
-| Tecla | Ação |
-|------|-------|
-| **W** | Mover para cima |
-| **A** | Mover para esquerda |
-| **S** | Mover para baixo |
-| **D** | Mover para direita |
-| **ESPAÇO** | Atirar nota musical |
-
-</td>
-<td width="50%">
-
-# 🎮 **Controls**
-
-| Key | Action |
-|------|--------|
-| **W** | Move up |
-| **A** | Move left |
-| **S** | Move down |
-| **D** | Move right |
-| **SPACE** | Shoot musical note |
-
-</td>
-</tr>
-</table>
+</div>
 
 ---
 
-<table>
-<tr>
-<td width="50%">
+# 🇧🇷 Português
 
-# 🖼️ **Screenshots**
+## 📖 Sobre o Projeto
 
-> Substitua os links abaixo pelas suas imagens reais.
+**Samsara: A Canção das Estrelas** é um jogo de ação e aventura desenvolvido inteiramente em **Assembly RISC-V**, rodando no simulador **FPGRARS**. 
 
-- Tela inicial  
-- Mapa 1  
-- Combate  
-- HUD + Loja  
+Mergulhe em uma experiência que captura a essência dos clássicos 8-bits, onde você controla **Samsara**, uma criança escolhida por uma estrela cadente para restaurar a harmonia dos reinos oníricos.
 
-```md
-<img src="https://github.com/placeholder.png" width="420">
-````
-
-</td>
-<td width="50%">
-
-# 🖼️ **Screenshots**
-
-> Replace the links below with your actual images.
-
-* Title screen
-* Map 1
-* Combat
-* HUD + Shop
-
-```md
-<img src="https://github.com/placeholder.png" width="420">
-```
-
-</td>
-</tr>
-</table>
+### ✨ Destaques
+- 🎵 Sistema de combate baseado em notas musicais
+- ♟️ Inimigos inspirados em peças de xadrez
+- 🎨 Arte pixel estilo retrô onírico
+- 🔊 Trilha sonora MIDI integrada
+- 🗺️ Múltiplos mapas para explorar
 
 ---
 
-<table>
-<tr>
-<td width="50%">
+## 🎮 Controles
 
-# ⚙️ **Tecnologias**
-
-* RISC-V RV32I
-* FPGRARS
-* Framebuffer 320×240
-* Áudio MIDI integrado
-* Sprites convertidos com **png2oac**
-* Música convertida via script Python
-
-</td>
-<td width="50%">
-
-# ⚙️ **Tech Stack**
-
-* RISC-V RV32I
-* FPGRARS
-* 320×240 framebuffer
-* Integrated MIDI audio
-* Sprites converted using **png2oac**
-* Music converted with Python script
-
-</td>
-</tr>
-</table>
+| Ação | Tecla |
+|:-----|:-----:|
+| Mover para cima | **W** |
+| Mover para esquerda | **A** |
+| Mover para baixo | **S** |
+| Mover para direita | **D** |
+| Atacar (nota musical) | **ESPAÇO** |
 
 ---
 
+## 🖼️ Galeria
+
+### Capturas de Tela
+
+<div align="center">
+
 <table>
 <tr>
-<td width="50%">
-
-# ♟️ **Inimigos**
-
-* Cavalo — Movimento em L
-* Bispo — Movimento diagonal
-* Torre — Movimento horizontal
-* Dama — Persegue o jogador (12 hits)
-* Carneiro — Foge do jogador
-
+<td align="center" width="50%">
+<img src="./assets/screenshots/tela-inicial.png" width="100%" alt="Tela Inicial">
+<br><b>🏠 Tela Inicial</b>
 </td>
-<td width="50%">
-
-# ♟️ **Enemies**
-
-* Knight — L-shaped movement
-* Bishop — Diagonal sliding
-* Rook — Horizontal movement
-* Queen — Aggressively chases player (12 hits)
-* Sheep — Runs away from player
-
+<td align="center" width="50%">
+<img src="./assets/screenshots/mapa1.png" width="100%" alt="Mapa 1">
+<br><b>🗺️ Mapa 1</b>
+</td>
+</tr>
+<tr>
+<td align="center" width="50%">
+<img src="./assets/screenshots/combate.png" width="100%" alt="Combate">
+<br><b>⚔️ Sistema de Combate</b>
+</td>
+<td align="center" width="50%">
+<img src="./assets/screenshots/hud-loja.png" width="100%" alt="HUD e Loja">
+<br><b>💰 HUD e Loja</b>
 </td>
 </tr>
 </table>
+
+</div>
 
 ---
 
-<table>
-<tr>
-<td width="50%">
+## ♟️ Bestiário
 
-# 🚀 **Como Executar**
-
-1. Abra o **FPGRARS**
-2. Carregue `main.s`
-3. Deixe sprites + música no mesmo diretório
-4. Clique em **Assemble & Run**
-
-</td>
-<td width="50%">
-
-# 🚀 **How to Run**
-
-1. Open **FPGRARS**
-2. Load `main.s`
-3. Keep sprites + music in the same folder
-4. Click **Assemble & Run**
-
-</td>
-</tr>
-</table>
+| Inimigo | Comportamento | Dificuldade |
+|---------|--------------|-------------|
+| 🐴 **Cavalo** | Movimento em L (xadrez) | ⭐⭐ |
+| ⛪ **Bispo** | Movimento diagonal | ⭐⭐ |
+| 🏰 **Torre** | Movimento horizontal/vertical | ⭐⭐⭐ |
+| 👑 **Dama** | Persegue agressivamente (12 hits) | ⭐⭐⭐⭐⭐ |
+| 🐑 **Carneiro** | Foge do jogador | ⭐ |
 
 ---
 
+## ⚙️ Stack Tecnológica
+
+- **RISC-V RV32I** - Arquitetura de processador
+- **FPGRARS** - Simulador e ambiente de desenvolvimento
+- **Framebuffer 320×240** - Sistema gráfico
+- **MIDI Audio** - Sistema de áudio integrado
+- **png2oac** - Conversor de sprites
+- **Python** - Scripts de conversão de música
+
+---
+
+## 🚀 Como Executar
+
+1. **Baixe e instale** o [FPGRARS](https://github.com/fpgrars)
+2. **Clone** este repositório
+   ```bash
+   git clone https://github.com/seu-usuario/samsara.git
+   cd samsara
+   ```
+3. **Abra** o FPGRARS
+4. **Carregue** o arquivo `main.asm`
+5. **Verifique** se as pastas `sprites/`, `sounds/` e `guide/` estão no mesmo diretório
+6. **Clique** em **Assemble & Run**
+7. **Aproveite** a aventura! 🎮
+
+
+## 👥 Equipe de Desenvolvimento
+
+### 🎓 Autores Principais
+
+<div align="center">
+
+| Carlos Manoel | João Pedro | Karolina Alves | Marianna Penha |
+|:-------------:|:----------:|:--------------:|:--------------:|
+| Developer | Developer | Developer | Developer |
+
+</div>
+
+### 🤝 Colaboradores
+
+[@clawdeenk](https://github.com/clawdeenk) • [@jarradesuco](https://github.com/jarradesuco) • [@JoSanInk](https://github.com/JoSanInk) • [@lvtating](https://github.com/lvtating)
+
+---
+
+## 📝 Licença
+
+Este projeto foi desenvolvido como parte de um trabalho acadêmico. Sinta-se livre para usar o código para fins educacionais.
+
+---
+
+<div align="center">
+
+### ⭐ Se você gostou deste projeto, considere dar uma estrela!
+
+**Feito com 💙 e muito Assembly**
+
+[⬆ Voltar ao topo](#-samsara-a-canção-das-estrelas)
+
+</div>
+
+---
+---
+
+# 🇺🇸 English
+
+## 📖 About the Project
+
+**Samsara: The Song of the Stars** is an action-adventure game fully developed in **RISC-V Assembly**, running on the **FPGRARS** simulator.
+
+Dive into an experience that captures the essence of 8-bit classics, where you control **Samsara**, a child chosen by a falling star to restore harmony to the dream realms.
+
+### ✨ Highlights
+- 🎵 Musical note-based combat system
+- ♟️ Chess piece-inspired enemies
+- 🎨 Dreamlike retro pixel art
+- 🔊 Integrated MIDI soundtrack
+- 🗺️ Multiple maps to explore
+
+---
+
+## 🎮 Controls
+
+| Action | Key |
+|:-------|:---:|
+| Move up | **W** |
+| Move left | **A** |
+| Move down | **S** |
+| Move right | **D** |
+| Attack (musical note) | **SPACE** |
+
+---
+
+## 🖼️ Gallery
+
+### Screenshots
+
+<div align="center">
+
 <table>
 <tr>
-<td width="50%">
-
-# 👥 **Autores & Colaboradores**
-
-* Carlos Manoel
-* João Pedro
-* Karolina Alves
-* Marianna Penha
-
-**Colaboradores:**
-@clawdeenk • @jarradesuco • @JoSanInk • @lvtating
-
+<td align="center" width="50%">
+<img src="./assets/tela_inicial.png" width="100%" alt="Title Screen">
+<br><b> Menu </b>
 </td>
-<td width="50%">
-
-# 👥 **Authors & Contributors**
-
-* Carlos Manoel
-* João Pedro
-* Karolina Alves
-* Marianna Penha
-
-**Collaborators:**
-@clawdeenk • @jarradesuco • @JoSanInk • @lvtating
-
+<td align="center" width="50%">
+<img src="./assets/map_1.png" width="100%" alt="Map 1">
+<br><b>🗺️ Map 1</b>
+</td>
+</tr>
+<tr>
+<td align="center" width="50%">
+<img src="./assets/xadrez.jpg" width="100%" alt="Combat">
+<br><b>⚔️ Enemy </b>
+</td>
+<td align="center" width="50%">
+<img src="./assets/todos_itens.png" width="100%" alt="HUD and Shop">
+<br><b>💰 Items </b>
 </td>
 </tr>
 </table>
-```
+
+</div>
+
+---
+
+## ♟️ Bestiary
+
+| Enemy | Behavior | Difficulty |
+|-------|----------|-----------|
+| 🐴 **Knight** | L-shaped movement (chess) | ⭐⭐ |
+| ⛪ **Bishop** | Diagonal sliding | ⭐⭐ |
+| 🏰 **Rook** | Horizontal/vertical movement | ⭐⭐⭐ |
+| 👑 **Queen** | Aggressively chases player (12 hits) | ⭐⭐⭐⭐⭐ |
+| 🐑 **Sheep** | Runs away from player | ⭐ |
+
+---
+
+## ⚙️ Tech Stack
+
+- **RISC-V RV32I** - Processor architecture
+- **FPGRARS** - Simulator and development environment
+- **Framebuffer 320×240** - Graphics system
+- **MIDI Audio** - Integrated audio system
+- **png2oac** - Sprite converter
+- **Python** - Music conversion scripts
+
+---
+
+## 🚀 How to Run
+
+1. **Download and install** [FPGRARS](https://github.com/fpgrars)
+2. **Clone** this repository
+   ```bash
+   git clone https://github.com/your-username/samsara.git
+   cd samsara
+   ```
+3. **Open** FPGRARS
+4. **Load** the `main.asm` file
+5. **Make sure** the `sprites/`, `sounds/` and `guide/` folders are in the same directory
+6. **Click** on **Assemble & Run**
+7. **Enjoy** the adventure! 🎮
 
 
+## 👥 Development Team
+
+### 🎓 Main Authors
+
+<div align="center">
+
+| Carlos Manoel | João Pedro | Karolina Alves | Marianna Penha |
+|:-------------:|:----------:|:--------------:|:--------------:|
+| Artist | Developer | Developer | Developer |
+
+</div>
+
+### 🤝 Contributors
+
+[@clawdeenk](https://github.com/clawdeenk) • [@jarradesuco](https://github.com/jarradesuco) • [@JoSanInk](https://github.com/JoSanInk) • [@lvtating](https://github.com/lvtating)
+
+---
+
+## 📝 License
+
+This project was developed as part of an academic assignment. Feel free to use the code for educational purposes.
+
+---
+
+<div align="center">
+
+### ⭐ If you enjoyed this project, consider giving it a star!
+
+**Made with 💙 and lots of Assembly**
+
+[⬆ Back to top](#-samsara-a-canção-das-estrelas)
+
+</div>
