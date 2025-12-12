@@ -156,24 +156,24 @@ Dive into an experience that captures the essence of 8-bit classics, where you c
 
 ## ⚙️ Stack Tecnológica
 
-- **RISC-V RV32I** - Arquitetura de processador
-- **FPGRARS** - Simulador e ambiente de desenvolvimento
-- **Framebuffer 320×240** - Sistema gráfico
-- **MIDI Audio** - Sistema de áudio integrado
-- **png2oac** - Conversor de sprites
-- **Python** - Scripts de conversão de música
+- 🔧 **RISC-V RV32I** - Arquitetura de processador
+- 🖥️ **FPGRARS** - Simulador e ambiente de desenvolvimento
+- 🎨 **Framebuffer 320×240** - Sistema gráfico
+- 🔊 **MIDI Audio** - Sistema de áudio integrado
+- 🖼️ **png2oac** - Conversor de sprites
+- 🐍 **Python** - Scripts de conversão de música
 
 </td>
 <td width="50%" valign="top">
 
 ## ⚙️ Tech Stack
 
-- **RISC-V RV32I** - Processor architecture
-- **FPGRARS** - Simulator and development environment
-- **Framebuffer 320×240** - Graphics system
-- **MIDI Audio** - Integrated audio system
-- **png2oac** - Sprite converter
-- **Python** - Music conversion scripts
+- 🔧 **RISC-V RV32I** - Processor architecture
+- 🖥️ **FPGRARS** - Simulator and development environment
+- 🎨 **Framebuffer 320×240** - Graphics system
+- 🔊 **MIDI Audio** - Integrated audio system
+- 🖼️ **png2oac** - Sprite converter
+- 🐍 **Python** - Music conversion scripts
 
 </td>
 </tr>
@@ -292,6 +292,8 @@ This project was developed as part of an academic assignment. Feel free to use t
 ---
 
 <div align="center">
+
+<img src="https://i.pinimg.com/originals/0e/f9/fa/0ef9faaca2a17f93bc03a4184f0ee59e.gif" width="200" alt="Thank you">
 
 ### ⭐ Se você gostou deste projeto, considere dar uma estrela!
 ### ⭐ If you enjoyed this project, consider giving it a star!
