@@ -70,8 +70,8 @@ Dive into an experience that captures the essence of 8-bit classics, where you c
 </tr>
 <tr>
 <td align="center" width="50%">
-<img src="./src/assets/xadrez.jpg" width="100%" alt="Combat">
-<br><b>⚔️ Inimigos / Enemies</b>
+<img src="./src/assets/game_over.png" width="100%" alt="Combat">
+<br><b>⚔️ Game Over</b>
 </td>
 <td align="center" width="50%">
 <img src="./src/assets/samsara.jpg" width="100%" alt="Items">
