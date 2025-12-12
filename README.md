@@ -74,8 +74,8 @@ Dive into an experience that captures the essence of 8-bit classics, where you c
 <br><b>⚔️ Inimigos / Enemies</b>
 </td>
 <td align="center" width="50%">
-<img src="./src/assets/todos_itens.png" width="100%" alt="Items">
-<br><b>💰 Itens / Items</b>
+<img src="./src/assets/samsara.jpg" width="100%" alt="Items">
+<br><b>💤 Samsara</b>
 </td>
 </tr>
 </table>
