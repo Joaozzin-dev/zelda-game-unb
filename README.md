@@ -293,7 +293,7 @@ This project was developed as part of an academic assignment. Feel free to use t
 
 <div align="center">
 
-<img src="https://i.pinimg.com/originals/0e/f9/fa/0ef9faaca2a17f93bc03a4184f0ee59e.gif" width="200" alt="Thank you">
+<img src="https://66.media.tumblr.com/tumblr_mb6qqmglDb1rfjowdo1_500.gif" width="200" alt="Thank you">
 
 ### ⭐ Se você gostou deste projeto, considere dar uma estrela!
 ### ⭐ If you enjoyed this project, consider giving it a star!
