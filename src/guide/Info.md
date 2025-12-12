@@ -4,7 +4,7 @@
 <div align="center">
 
 **Projeto:** 🌟 Samsara — Reino dos Sonhos  
-**Versão:** 1.0 | **Última Atualização:** Dezembro 2024  
+**Versão:** 1.0 | **Última Atualização:** Dezembro 2025  
 **Objetivo:** Padronizar o ambiente de desenvolvimento e maximizar a colaboração entre os membros da equipe
 
 ---
