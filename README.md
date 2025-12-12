@@ -1,5 +1,5 @@
 # Samsara: A Canção das Estrelas / Samsara: The Song of the Stars  
-### 🌓 README Bilíngue — PT/EN Lado a Lado
+
 
 <table>
 <tr>
